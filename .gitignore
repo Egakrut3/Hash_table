@@ -1,0 +1,6 @@
+*.old
+bin/
+dep/
+*.elf
+
+*.csv
