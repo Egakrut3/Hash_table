@@ -1,10 +1,10 @@
 #include "Common.h"
-#include "Hash_table.h"
+#include "HT_test.h"
 
 // TODO - Add My_functions
 
 #define MOD 0x82F63B78
-static size_t crc32_hash([[maybe_unused]] void *gen, char *str) {
+static size_t crc32_hash([[maybe_unused]] void *gen, char const *str) {
 	assert(str);
 
 	size_t len = strlen(str);
@@ -24,16 +24,16 @@ static size_t crc32_hash([[maybe_unused]] void *gen, char *str) {
 	return crc;
 }
 
+#define FINAL_CODE
+
 int main() {
 	struct Hash_table ht = {};
-	Hash_table_ctor(&ht, crc32_hash, nullptr, 0);
+	CHECK_PROC(Hash_table_ctor, &ht, crc32_hash, nullptr, 0, HT_TEST_BUCKETS);
 
-	char str[] = "abc";
+	CHECK_PROC(ht_test_fill, &ht);
 
-	printf("%d\n", Hash_table_find(&ht, str));
-	Hash_table_insert(&ht, str);
-	printf("%d\n", Hash_table_find(&ht, str));
-
-	Hash_table_dtor(&ht);
+	CHECK_PROC(Hash_table_dtor, &ht);
 	return 0;
 }
+
+#undef FINAL_CODE

@@ -19,7 +19,7 @@ make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
 
 
 
-SRC	= Hash_table main
+SRC	= Hash_table HT_test main
 TARGET	= Test.elf
 
 
@@ -71,7 +71,7 @@ OPTIONS		=	$(MY_OPTIONS) $(C_WARNINGS) $(C_FEATURES) $(CPP_WARNINGS) $(CPP_FEATU
 
 
 
-.PHONY: all prepare test clean commit
+.PHONY: all prepare test noise data_base clean commit
 
 all: $(TARGET)
 
@@ -87,8 +87,18 @@ make_obj = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
 
 $(foreach src, $(SRC), $(eval $(call make_obj, $(src))))
 
-test: $(TARGET)
+test: $(TARGET) | data_base
 	@./$(TARGET)
+
+noise:
+	@gcc $(OPTIONS) -I$(INC_DIR) $(call make_src_path, Make_noise) -o Noise.elf
+	@./Noise.elf
+
+data_base:
+	@$(MAKE) noise
+	@cat data/Noise_test.txt data/words_alpha.txt | shuf > data/united_data.txt
+	@wc -c < data/united_data.txt > data/keys.txt
+	@cat data/united_data.txt >> data/keys.txt
 
 clean:
 	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET)
