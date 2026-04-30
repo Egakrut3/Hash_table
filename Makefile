@@ -19,7 +19,7 @@ make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
 
 
 
-SRC	= main
+SRC	= Hash_table main
 TARGET	= Test.elf
 
 
