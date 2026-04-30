@@ -10,6 +10,8 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include <immintrin.h>
+
 #if defined(NDEBUG)
 
 #define ON_DEBUG(...)

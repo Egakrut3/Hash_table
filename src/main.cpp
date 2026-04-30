@@ -5,7 +5,7 @@
 
 #define MOD 0x82F63B78
 static size_t crc32_hash([[maybe_unused]] void *gen, char const *str) {
-	assert(str);
+	assert(!gen); assert(str);
 
 	size_t len = strlen(str);
 	uint32_t crc = 0;
@@ -31,6 +31,7 @@ int main() {
 	CHECK_PROC(Hash_table_ctor, &ht, crc32_hash, nullptr, 0, HT_TEST_BUCKETS);
 
 	CHECK_PROC(ht_test_fill, &ht);
+	CHECK_PROC(ht_test_query, &ht);
 
 	CHECK_PROC(Hash_table_dtor, &ht);
 	return 0;

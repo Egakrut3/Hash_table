@@ -7,5 +7,6 @@
 
 int ht_test_fill(struct Hash_table *ht);
 
+int ht_test_query(struct Hash_table const *ht);
 
 #endif
