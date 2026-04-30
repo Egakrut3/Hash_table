@@ -1,8 +1,13 @@
+ALLOW_CPP	?= 1
+RELEASE		?= 0
+
+
+
 INC_DIR		= inc/
 
 SRC_DIR		= src/
-C_SUF		= .c
-make_c_path	= $(addprefix $(SRC_DIR), $(addsuffix $(C_SUF),	$(1)))
+SRC_SUF		= .cpp
+make_src_path	= $(addprefix $(SRC_DIR), $(addsuffix $(SRC_SUF), $(1)))
 
 OBJ_DIR		= bin/
 OBJ_SUF		= .o
@@ -12,23 +17,59 @@ DEP_DIR		= dep/
 DEP_SUF		= .d
 make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
 
-SRC = main
 
-TARGET = Test.elf
 
-C_OPTIONS	=	-D_DEBUG -ggdb3 -std=c23 -O3 -mavx512f															\
-			-Wall -Wextra -Waggressive-loop-optimizations -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconversion -Wempty-body -Wfloat-equal	\
+SRC	= main
+TARGET	= Test.elf
+
+
+
+MY_OPTIONS	=	-mavx512f	\
+			-pie
+
+ifeq ($(ALLOW_CPP), 1)
+
+MY_OPTIONS	+=	-std=c++23
+
+else
+
+MY_OPTIONS	+=	-std=c23
+
+endif
+
+ifeq ($(RELEASE), 0)
+
+MY_OPTIONS	+=	-Og		\
+			-ggdb3 -D_DEBUG
+
+C_WARNINGS	=	-Wall -Wextra -Waggressive-loop-optimizations -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconversion -Wempty-body -Wfloat-equal	\
 			-Wformat-nonliteral -Wformat-security -Wformat-signedness -Wformat=2 -Winline -Wlogical-op -Wopenmp-simd -Wpacked -Wpointer-arith -Winit-self		\
 			-Wredundant-decls -Wshadow -Wsign-conversion -Wstrict-overflow=2 -Wsuggest-attribute=noreturn -Wsuggest-final-methods -Wsuggest-final-types		\
 			-Wswitch-default -Wswitch-enum -Wsync-nand -Wundef -Wunreachable-code -Wunused -Wuseless-cast -Wvariadic-macros -Wno-missing-field-initializers		\
-			-Wno-narrowing -Wno-varargs -Wstack-protector -fcheck-new -fstack-protector -fstrict-overflow -flto-odr-type-merging -fno-omit-frame-pointer		\
-			-Wlarger-than=8192 -Wstack-usage=8192 -pie -fPIE -Werror=vla												\
+			-Wno-narrowing -Wno-varargs -Wstack-protector -Wlarger-than=8192 -Wstack-usage=8192 -Werror=vla
+
+C_FEATURES	=	-fcheck-new -fstack-protector -fstrict-overflow -flto-odr-type-merging -fno-omit-frame-pointer -fPIE	\
 			-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-CPP_OPTIONS	=	-Weffc++ -Wc++14-compat -Woverloaded-virtual -Wconditionally-supported -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsign-promo -Wstrict-null-sentinel	\
-			-Wsuggest-override -Wno-literal-suffix -Wno-old-style-cast -fsized-deallocation
+ifeq ($(ALLOW_CPP), 1)
 
-OPTIONS		= $(C_OPTIONS)
+CPP_WARNINGS	=	-Weffc++ -Wc++14-compat -Woverloaded-virtual -Wconditionally-supported -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsign-promo -Wstrict-null-sentinel	\
+			-Wsuggest-override -Wno-literal-suffix -Wno-old-style-cast
+
+CPP_FEATURES	=	-fsized-deallocation
+
+endif
+
+else
+
+MY_OPTIONS	+=	-Ofast		\
+			-DNDEBUG
+
+endif
+
+OPTIONS		=	$(MY_OPTIONS) $(C_WARNINGS) $(C_FEATURES) $(CPP_WARNINGS) $(CPP_FEATURES)
+
+
 
 .PHONY: all prepare test clean commit
 
@@ -41,6 +82,11 @@ $(TARGET): $(call make_obj_path, $(SRC))
 	@gcc $(OPTIONS) $^ -o $@
 	@echo Compilation end
 
+make_obj = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
+	@gcc $(OPTIONS) -I$(INC_DIR) -c $$< -o $$@
+
+$(foreach src, $(SRC), $(eval $(call make_obj, $(src))))
+
 test: $(TARGET)
 	@./$(TARGET)
 
@@ -52,18 +98,15 @@ commit:
 	@git commit -m "$(MSG)"
 	@git push
 
+
+
 .SECONDEXPANSION:
 
-%$(DEP_SUF): $(call make_c_path, $$(*F)) | prepare
-	@gcc -MM $(OPTIONS) -I$(INC_DIR) $< | sed 's,\($(*F)\).o[ :]*,$(call make_obj_path, \1) $@: ,g' > $@
+%$(DEP_SUF): $(call make_src_path, $$(*F)) | prepare
+	@gcc -MM $(OPTIONS) -I$(INC_DIR) $< | sed 's,$(addsuffix \($(*F)\), $(OBJ_SUF))[ :]*,$(call make_obj_path, \1) $@: ,g' > $@
 
-ifeq (, $(filter clean, $(MAKECMDGOALS)))
+ifeq ($(filter clean, $(MAKECMDGOALS)),)
 
 include $(call make_dep_path, $(SRC))
 
 endif
-
-make_c_obj = $(call make_obj_path, $(1)): $(call make_c_path, $(1)) | prepare;	\
-	@gcc $(OPTIONS) -I$(INC_DIR) -c $$< -o $$@
-
-$(foreach src, $(SRC), $(eval $(call make_c_obj, $(src))))

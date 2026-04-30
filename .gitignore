@@ -1,6 +1,4 @@
 *.old
+.vscode/
 bin/
-dep/
 *.elf
-
-*.csv
