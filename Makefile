@@ -119,7 +119,7 @@ update_data: update_noise
 
 
 test: $(TARGET)
-	@./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+	@taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
 
 clean:
 	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) $(NOISE_TEST_PATH) $(KEYS_PATH) $(QUERIES_PATH)
