@@ -46,7 +46,7 @@ static int list_insert(List_node **const cur, ht_arg_key_t const key) {
 	assert(cur);
 
 	if (!*cur) {
-		*cur = (List_node *)malloc(sizeof(**cur)); // TODO - how to use decltype?
+		*cur = (decltype(*cur))malloc(sizeof(**cur)); // TODO - how to use decltype?
 		(*cur)->next	= nullptr;
 		HT_KEY_COPY((*cur)->key, key);
 

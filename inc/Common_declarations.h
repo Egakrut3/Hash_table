@@ -58,6 +58,21 @@ do {										\
 	return;									\
 } while (false)
 
+#ifdef __STDC_VERSION__
+
+#define TYPEOF(ent_or_expr) typeof(ent_or_expr)
+
+#define REMOVE_POINTER(ent_or_expr) (typeof(*(typeof(ent_or_expr))nullptr))
+
+#else
+
+#define TYPEOF(ent_or_expr) std::remove_cv_t<decltype(ent_or_expr)>
+
+#include <type_traits>
+#define REMOVE_POINTER(ent_or_expr) std::remove_pointer_t<decltype(ent_or_expr)>
+
+#endif
+
 typedef char unsigned byte_t;
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
