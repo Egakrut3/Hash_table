@@ -62,7 +62,7 @@ endif
 
 else
 
-MY_OPTIONS	+=	-Ofast		\
+MY_OPTIONS	+=	-O3		\
 			-DNDEBUG
 
 endif
@@ -120,6 +120,9 @@ update_data: update_noise
 
 test: $(TARGET)
 	@taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+
+release_test: $(TARGET)
+	@$(MAKE) -B RELEASE=1 test
 
 clean:
 	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) $(NOISE_TEST_PATH) $(KEYS_PATH) $(QUERIES_PATH)
