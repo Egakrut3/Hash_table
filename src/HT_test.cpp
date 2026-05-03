@@ -70,15 +70,16 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 }
 
 int HT_test_report(HT_hash_func_t hash, struct Hash_gen *gen, size_t buckets, size_t repeat, char const *keys_path, char const *queries_path) {
+	struct Hash_table ht = {};
+	CHECK_PROC(Hash_table_ctor, &ht, hash, gen, buckets);
+
+	CHECK_PROC(HT_test_fill, &ht, keys_path);
+
 	for (size_t it = 0; it < repeat; it++) {
-		struct Hash_table ht = {};
-		CHECK_PROC(Hash_table_ctor, &ht, hash, gen, buckets);
-
-		CHECK_PROC(HT_test_fill, &ht, keys_path);
 		CHECK_PROC(HT_test_query, &ht, queries_path);
-
-		CHECK_PROC(Hash_table_dtor, &ht);
 	}
+
+	CHECK_PROC(Hash_table_dtor, &ht);
 
 	return 0;
 }
