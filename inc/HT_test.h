@@ -3,10 +3,6 @@
 
 #include "Hash_table.h"
 
-#define HT_TEST_BUCKETS ((size_t)0x2'00'00)
-
-int ht_test_fill(struct Hash_table *ht);
-
-int ht_test_query(struct Hash_table const *ht);
+int HT_test_report(HT_hash_func_t hash, struct Hash_gen *gen, size_t buckets, size_t repeat, char const *keys_path, char const *queries_path);
 
 #endif

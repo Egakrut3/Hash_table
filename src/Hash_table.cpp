@@ -1,77 +1,92 @@
 #include "Hash_table.h"
 
-int Hash_table_ctor(struct Hash_table *const ht, hash_func hash, void *const gen, size_t const gen_len, size_t const buckets_cnt) {
+#define FINAL_CODE
+
+int Hash_table_ctor(struct Hash_table *const ht, HT_hash_func_t hash, struct Hash_gen const *const gen, size_t const buckets_cnt) {
 	assert(ht);
 
 	ht->hash	= hash;
-	if (gen) {
-		ht->gen = malloc(gen_len);
-		memcpy(ht->gen, gen, gen_len);
+	if (!gen) { ht->gen = nullptr; }
+	else {
+		ht->gen		= (TYPEOF_UNQUAL(ht->gen))malloc(sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->gen))));
+
+		ht->gen->size	= gen->size;
+		ht->gen->data	= malloc(ht->gen->size);
+		memcpy(ht->gen->data, gen->data, gen->size);
 	}
-	ht->gen_len	= gen_len;
 
 	ht->buckets_cnt	= buckets_cnt;
-	ht->buckets	= (decltype(ht->buckets))calloc(ht->buckets_cnt, sizeof(*ht->buckets));
+	ht->buckets	= (TYPEOF_UNQUAL(ht->buckets))calloc(ht->buckets_cnt, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->buckets))));
 
 	return 0;
 }
 
-static void list_free(List_node **const cur) {
+static int list_free(List_node **const cur) {
 	assert(cur);
 
-	if (!*cur) { return; }
+	if (!*cur) { return 0; }
 
-	list_free(&(*cur)->next);
+	CHECK_PROC(list_free, &(*cur)->next);
+
 	HT_KEY_FREE((*cur)->key);
-	free(*cur);
+	free_sized(*cur, sizeof(REMOVE_POINTER(REMOVE_POINTER(TYPEOF_UNQUAL(cur)))));
 	*cur = nullptr;
+
+	return 0;
 }
 
 int Hash_table_dtor(struct Hash_table *const ht) {
 	assert(ht);
 
-	if (ht->gen) { free(ht->gen); }
+	if (ht->gen) { free_sized(ht->gen->data, ht->gen->size); }
 
 	for (size_t i = 0; i < ht->buckets_cnt; i++) {
-		if (ht->buckets[i]) {
-			list_free(&ht->buckets[i]);
-		}
+		if (ht->buckets[i]) { CHECK_PROC(list_free, &ht->buckets[i]); }
 	}
-	free(ht->buckets);
+	free_sized(ht->buckets, ht->buckets_cnt * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->buckets))));
 
 	return 0;
 }
 
-static int list_insert(List_node **const cur, ht_arg_key_t const key) {
+static int list_insert(List_node **const cur, HT_arg_key_t const key) {
 	assert(cur);
 
 	if (!*cur) {
-		*cur = (decltype(*cur))malloc(sizeof(**cur)); // TODO - how to use decltype?
-		(*cur)->next	= nullptr;
+		*cur = (REMOVE_POINTER(TYPEOF_UNQUAL(cur)))malloc(sizeof(REMOVE_POINTER(REMOVE_POINTER(TYPEOF_UNQUAL(cur)))));
+
+		(*cur)->next = nullptr;
+
 		HT_KEY_COPY((*cur)->key, key);
 
 		return 0;
 	}
 
-	if (HT_KEY_EQUAL((*cur)->key, key)) { return 0; }
+	if (HT_KEY_EQUAL((*cur)->key, key)) { fprintf(stderr, "Key %s already exists\n", key); return 0; }
 
-	return list_insert(&(*cur)->next, key);
+	CHECK_PROC(list_insert, &(*cur)->next, key);
+
+	return 0;
 }
 
-int Hash_table_insert(struct Hash_table *const ht, ht_arg_key_t const key) {
+int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	assert(ht);
 
 	size_t bucket = ht->hash(ht->gen, key) % ht->buckets_cnt;
-	return list_insert(&ht->buckets[bucket], key);
+	CHECK_PROC(list_insert, &ht->buckets[bucket], key);
+
+	return 0;
 }
 
-static byte_t list_find(List_node const *const cur, ht_arg_key_t const key) {
-	if (!cur)		{ return 0; }
-	if (HT_KEY_EQUAL(cur->key, key)) { return 1; }
+#undef FINAL_CODE
+
+static byte_t list_find(List_node const *const cur, HT_arg_key_t const key) {
+	if (!cur)				{ return 0; }
+	if (HT_KEY_EQUAL(cur->key, key))	{ return 1; }
+
 	return list_find(cur->next, key);
 }
 
-byte_t Hash_table_find(struct Hash_table const *const ht, ht_arg_key_t const key) {
+byte_t Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key) {
 	assert(ht);
 
 	size_t bucket = ht->hash(ht->gen, key) % ht->buckets_cnt;

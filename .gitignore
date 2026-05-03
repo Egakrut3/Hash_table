@@ -1,6 +1,7 @@
 *.old
-.vscode/
 bin/
 *.elf
+
+.vscode/
 
 perf.data

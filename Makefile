@@ -71,32 +71,31 @@ OPTIONS		=	$(MY_OPTIONS) $(WARNINGS) $(FEATURES)
 
 
 
-.PHONY: all prepare test clean commit noise data_base
+.PHONY: all prepare test clean commit update_noise update_data
 
 all: $(TARGET)
 
 prepare:
 	@mkdir -p $(OBJ_DIR) $(DEP_DIR)
 
-$(TARGET): $(call make_obj_path, $(SRC))
-	@gcc $(OPTIONS) $^ -o $@
-	@echo Compilation end
-
 make_obj = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
 	@gcc $(OPTIONS) -I$(INC_DIR) -c $$< -o $$@
 
 $(foreach src, $(SRC), $(eval $(call make_obj, $(src))))
 
-test: $(TARGET) | data_base
-	@./$(TARGET)
+$(TARGET): $(call make_obj_path, $(SRC))
+	@gcc $(OPTIONS) $^ -o $@
+	@echo Compilation end
 
-clean:
-	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET)
 
-commit:
-	@git add .
-	@git commit -m "$(MSG)"
-	@git push
+
+NOISE_CNT	?= 700000
+NOISE_TEST_PATH	?= $(call make_data_path, noise_test)
+
+KEYS_PATH	?= $(call make_data_path, keys)
+QUERIES_PATH	?= $(call make_data_path, keys) # TODO -
+
+FIXED_DATA	?= common_dict words_alpha
 
 
 
@@ -104,14 +103,31 @@ DATA_DIR	= data/
 DATA_SUF	= .txt
 make_data_path	= $(addprefix $(DATA_DIR), $(addsuffix $(DATA_SUF), $(1)))
 
-noise:
+Noise.elf:
 	@gcc $(OPTIONS) -I$(INC_DIR) $(call make_src_path, Make_noise) -o Noise.elf
-	@./Noise.elf $(NOISE_COUNT) > $(call make_data_path, $(NOISE_DEST))
 
-data_base: | noise
-	@cat $(call make_data_path, words_alpha) $(call make_data_path, common_dict) $(call make_data_path, $(NOISE_DEST)) | sort -u | shuf > $(call make_data_path, united_data)
-	@wc -c < $(call make_data_path, united_data) > $(call make_data_path, keys)
-	@cat $(call make_data_path, united_data) >> $(call make_data_path, keys)
+update_noise: Noise.elf
+	@./Noise.elf $(NOISE_CNT) > $(NOISE_TEST_PATH)
+
+update_data: update_noise
+	@temp=$$(mktemp);										\
+	cat $(call make_data_path, $(FIXED_DATA)) $(NOISE_TEST_PATH) | sort -u | shuf > "$$temp";	\
+	wc -c < "$$temp" > $(KEYS_PATH);								\
+	cat "$$temp" >> $(KEYS_PATH);									\
+	rm "$$temp"
+
+
+
+test: $(TARGET)
+	@./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+
+clean:
+	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) $(NOISE_TEST_PATH) $(KEYS_PATH) $(QUERIES_PATH)
+
+commit:
+	@git add .
+	@git commit -m "$(MSG)"
+	@git push
 
 
 

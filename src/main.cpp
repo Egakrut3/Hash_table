@@ -4,21 +4,24 @@
 // TODO - Add My_functions
 
 #define MOD 0x82F63B78
-static size_t crc32_hash([[maybe_unused]] void *gen, char const *str) {
-	assert(!gen); assert(str);
+static size_t crc32_hash([[maybe_unused]] struct Hash_gen *const gen, char const *str) {
+	assert(str);
+	assert(!gen);
 
-	size_t len = strlen(str);
 	uint32_t crc = 0;
-	for (size_t i = 0; i < len; i++) {
-		crc ^= (uint32_t)str[i];
+	while (*str) {
+		crc ^= (uint32_t)*str;
 
 		for (size_t bt = 0; bt < CHAR_BIT; bt++) {
 			if (crc & 1) {
 				crc = crc >> 1 ^ MOD;
-			} else {
+			}
+			else {
 				crc = crc >> 1;
 			}
 		}
+
+		str++;
 	}
 
 	return crc;
@@ -26,14 +29,13 @@ static size_t crc32_hash([[maybe_unused]] void *gen, char const *str) {
 
 #define FINAL_CODE
 
-int main() {
-	struct Hash_table ht = {};
-	CHECK_PROC(Hash_table_ctor, &ht, crc32_hash, nullptr, 0, HT_TEST_BUCKETS);
+int main(int argc, char const **argv) {
+	assert(argc == 3);
 
-	CHECK_PROC(ht_test_fill, &ht);
-	CHECK_PROC(ht_test_query, &ht);
+	#define HT_TEST_BUCKETS	((size_t)0x2'00'00)
+	#define HT_TEST_REPEAT	((size_t)5)
+	CHECK_PROC(HT_test_report, crc32_hash, nullptr, HT_TEST_BUCKETS, HT_TEST_REPEAT, argv[1], argv[2]);
 
-	CHECK_PROC(Hash_table_dtor, &ht);
 	return 0;
 }
 

@@ -3,9 +3,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include <limits.h>
 #include <stdint.h>
@@ -60,22 +59,18 @@ do {										\
 
 #ifdef __STDC_VERSION__
 
-#define TYPEOF(ent_or_expr) typeof(ent_or_expr)
-
-#define REMOVE_POINTER(ent_or_expr) (typeof(*(typeof(ent_or_expr))nullptr))
+#define TYPEOF_UNQUAL(expr)	typeof(expr)
+#define REMOVE_POINTER(type)	TYPEOF_UNQUAL(*(type)nullptr)
 
 #else
 
-#define TYPEOF(ent_or_expr) std::remove_cv_t<decltype(ent_or_expr)>
-
 #include <type_traits>
-#define REMOVE_POINTER(ent_or_expr) std::remove_pointer_t<decltype(ent_or_expr)>
+
+#define TYPEOF_UNQUAL(expr)	std::remove_cv_t<decltype(expr)>
+#define REMOVE_POINTER(type)	std::remove_pointer_t<type>
 
 #endif
 
 typedef char unsigned byte_t;
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
 
 #endif
