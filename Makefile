@@ -25,7 +25,7 @@ TARGET	= Test.elf
 
 
 
-MY_OPTIONS	=	-mavx512f	\
+MY_OPTIONS	=	-DHT_OPTIMIZATION=0 -mavx512f	\
 			-pie -fPIE
 
 ifeq ($(ALLOW_CPP), 1)
@@ -90,6 +90,10 @@ $(TARGET): $(call make_obj_path, $(SRC))
 
 
 
+DATA_DIR	= data/
+DATA_SUF	= .txt
+make_data_path	= $(addprefix $(DATA_DIR), $(addsuffix $(DATA_SUF), $(1)))
+
 NOISE_CNT	?= 700000
 NOISE_PATH	?= $(call make_data_path, noise)
 
@@ -97,12 +101,6 @@ KEYS_PATH	?= $(call make_data_path, keys)
 QUERIES_PATH	?= $(call make_data_path, queries) # TODO -
 
 FIXED_DATA	?= common_dict words_alpha
-
-
-
-DATA_DIR	= data/
-DATA_SUF	= .txt
-make_data_path	= $(addprefix $(DATA_DIR), $(addsuffix $(DATA_SUF), $(1)))
 
 Noise.elf:
 	@gcc $(OPTIONS) -I$(INC_DIR) $(call make_src_path, Make_noise) -o Noise.elf
@@ -122,7 +120,7 @@ update_data:
 	rm "$$temp"
 
 test: $(TARGET)
-	@taskset -c 15 sudo chrt --f 98 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+	@taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
 
 release_test:
 	@$(MAKE) -B RELEASE=1 test

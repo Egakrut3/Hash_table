@@ -10,6 +10,9 @@ static size_t crc32_hash([[maybe_unused]] struct Hash_gen *const gen, char const
 
 	uint32_t crc = 0;
 	while (*str) {
+	#if HT_OPTIMIZATION > 0
+		crc = _mm_crc32_u8(crc, *str);
+	#else
 		crc ^= (uint32_t)*str;
 
 		for (size_t bt = 0; bt < CHAR_BIT; bt++) {
@@ -20,6 +23,7 @@ static size_t crc32_hash([[maybe_unused]] struct Hash_gen *const gen, char const
 				crc = crc >> 1;
 			}
 		}
+	#endif
 
 		str++;
 	}
