@@ -71,7 +71,16 @@ static int list_insert(List_node **const cur, HT_arg_key_t const key) {
 int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	assert(ht);
 
-	size_t bucket = ht->hash(ht->gen, key) % ht->buckets_cnt;
+	size_t bucket = ht->hash(ht->gen, key);
+#if HT_OPTIMIZATION > 1
+	__asm__ (	"dec %1\n"
+			"and %1, %0"
+		:	"+r" (bucket)
+		:	"r" (ht->buckets_cnt)
+		:	"cc");
+#else
+	bucket %= ht->buckets_cnt;
+#endif
 	CHECK_PROC(list_insert, &ht->buckets[bucket], key);
 
 	return 0;

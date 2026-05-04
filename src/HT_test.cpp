@@ -61,7 +61,7 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 	fprintf(stderr,	"%zu queries passed, %zu found\n"
 			"Total %zu cycles spent = %g CPQ\n",
 			tot_queries, tot_found,
-			spent_cyc, (double)spent_cyc / (double)size);
+			spent_cyc, (double)spent_cyc / (double)tot_queries);
 
 	free(buffer);
 	fclose(input);

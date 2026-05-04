@@ -25,7 +25,7 @@ TARGET	= Test.elf
 
 
 
-MY_OPTIONS	=	-DHT_OPTIMIZATION=0 -mavx512f	\
+MY_OPTIONS	=	-DHT_OPTIMIZATION=2 -mavx512f	\
 			-pie -fPIE
 
 ifeq ($(ALLOW_CPP), 1)
@@ -94,7 +94,6 @@ DATA_DIR	= data/
 DATA_SUF	= .txt
 make_data_path	= $(addprefix $(DATA_DIR), $(addsuffix $(DATA_SUF), $(1)))
 
-NOISE_CNT	?= 700000
 NOISE_PATH	?= $(call make_data_path, noise)
 
 KEYS_PATH	?= $(call make_data_path, keys)

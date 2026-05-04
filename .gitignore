@@ -3,5 +3,3 @@ bin/
 *.elf
 
 .vscode/
-
-perf.data
