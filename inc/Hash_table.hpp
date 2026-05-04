@@ -1,7 +1,7 @@
 #ifndef HASH_TABLE
 #define HASH_TABLE
 
-#include "Common.h"
+#include "Common.hpp"
 
 typedef char const	*HT_arg_key_t;
 typedef char		*HT_mem_key_t;

@@ -1,4 +1,4 @@
-#include "Hash_table.h"
+#include "Hash_table.hpp"
 
 #define FINAL_CODE
 

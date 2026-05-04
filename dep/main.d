@@ -1,2 +1,2 @@
-main.o: src/main.cpp inc/Common.h inc/Common_declarations.h inc/HT_test.h \
- inc/Hash_table.h inc/Common.h
+main.o: src/main.cpp inc/Common.hpp inc/Common_declarations.hpp \
+ inc/HT_test.hpp inc/Hash_table.hpp inc/Common.hpp

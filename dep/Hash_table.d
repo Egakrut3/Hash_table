@@ -1,2 +1,2 @@
-Hash_table.o: src/Hash_table.cpp inc/Hash_table.h inc/Common.h \
- inc/Common_declarations.h
+Hash_table.o: src/Hash_table.cpp inc/Hash_table.hpp inc/Common.hpp \
+ inc/Common_declarations.hpp

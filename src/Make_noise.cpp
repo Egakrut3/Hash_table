@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "Common.hpp"
 #include <time.h>
 
 int main(int argc, char *argv[]) {
