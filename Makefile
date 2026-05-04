@@ -91,10 +91,10 @@ $(TARGET): $(call make_obj_path, $(SRC))
 
 
 NOISE_CNT	?= 700000
-NOISE_TEST_PATH	?= $(call make_data_path, noise_test)
+NOISE_PATH	?= $(call make_data_path, noise)
 
 KEYS_PATH	?= $(call make_data_path, keys)
-QUERIES_PATH	?= $(call make_data_path, keys) # TODO -
+QUERIES_PATH	?= $(call make_data_path, queries) # TODO -
 
 FIXED_DATA	?= common_dict words_alpha
 
@@ -108,19 +108,21 @@ Noise.elf:
 	@gcc $(OPTIONS) -I$(INC_DIR) $(call make_src_path, Make_noise) -o Noise.elf
 
 update_noise: Noise.elf
-	@./Noise.elf $(NOISE_CNT) > $(NOISE_TEST_PATH)
+	@./Noise.elf $(NOISE_CNT) > $(NOISE_PATH)
 
-update_data: update_noise
-	@temp=$$(mktemp);										\
-	cat $(call make_data_path, $(FIXED_DATA)) $(NOISE_TEST_PATH) | sort -u | shuf > "$$temp";	\
-	wc -c < "$$temp" > $(KEYS_PATH);								\
-	cat "$$temp" >> $(KEYS_PATH);									\
+update_data:
+	@$(MAKE) NOISE_CNT=700000 update_noise
+	@cat $(call make_data_path, $(FIXED_DATA)) $(NOISE_PATH) | sort -u | shuf > $(call make_data_path, united_data)
+	@wc -c < $(call make_data_path, united_data) | cat - $(call make_data_path, united_data) > $(KEYS_PATH)
+
+	@$(MAKE) NOISE_CNT=2000000 update_noise
+	@temp=$$(mktemp);											\
+	shuf -r -n 18000000 $(call make_data_path, united_data) | cat - $(NOISE_PATH) | shuf > "$$temp";	\
+	wc -c < "$$temp" | cat - "$$temp" > $(QUERIES_PATH);							\
 	rm "$$temp"
 
-
-
 test: $(TARGET)
-	@taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+	@taskset -c 15 sudo chrt --f 98 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
 
 release_test:
 	@$(MAKE) -B RELEASE=1 test
@@ -131,7 +133,7 @@ perf_report:
 	@perf report
 
 clean:
-	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) Noise.elf $(NOISE_TEST_PATH) $(KEYS_PATH) $(QUERIES_PATH)
+	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) Noise.elf $(NOISE_PATH) $(call make_data_path, united_data) $(KEYS_PATH) $(QUERIES_PATH)
 
 commit:
 	@git add .
