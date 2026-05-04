@@ -19,7 +19,8 @@ make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
 
 
 
-SRC	= Hash_table HT_test main
+SRC = Hash_table HT_test main
+
 TARGET	= Test.elf
 
 
@@ -71,7 +72,7 @@ OPTIONS		=	$(MY_OPTIONS) $(WARNINGS) $(FEATURES)
 
 
 
-.PHONY: all prepare test clean commit update_noise update_data
+.PHONY: all prepare update_noise update_data test release_test perf_report clean commit
 
 all: $(TARGET)
 
@@ -121,11 +122,16 @@ update_data: update_noise
 test: $(TARGET)
 	@taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
 
-release_test: $(TARGET)
+release_test:
 	@$(MAKE) -B RELEASE=1 test
 
+perf_report:
+	@$(MAKE) -B RELEASE=1
+	@perf record taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+	@perf report
+
 clean:
-	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) $(NOISE_TEST_PATH) $(KEYS_PATH) $(QUERIES_PATH)
+	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) Noise.elf $(NOISE_TEST_PATH) $(KEYS_PATH) $(QUERIES_PATH)
 
 commit:
 	@git add .

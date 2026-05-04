@@ -33,23 +33,23 @@ do {									\
 
 #define CHECK_PROC(proc, ...)							\
 do {										\
-	int __cur_err_val = proc(__VA_ARGS__);					\
-	if (!__cur_err_val) { break; }						\
+	int _cur_err_val = proc(__VA_ARGS__);					\
+	if (!_cur_err_val) { break; }						\
 	ON_DEBUG(								\
-		fprintf(stderr, "Error with code %d found\n", __cur_err_val);	\
+		fprintf(stderr, "Error with code %d found\n", _cur_err_val);	\
 		PRINT_LINE();							\
 		fputs(#proc " failed\n", stderr);				\
 	)									\
 	CLEAR_RESOURCES();							\
-	return __cur_err_val;							\
+	return _cur_err_val;							\
 } while (false)
 
 #define CHECK_PROC_VOID(proc, ...)						\
 do {										\
-	int __cur_err_val = proc(__VA_ARGS__);					\
-	if (!__cur_err_val) { break; }						\
+	int _cur_err_val = proc(__VA_ARGS__);					\
+	if (!_cur_err_val) { break; }						\
 	ON_DEBUG(								\
-		fprintf(stderr, "Error with code %d found\n", __cur_err_val);	\
+		fprintf(stderr, "Error with code %d found\n", _cur_err_val);	\
 		PRINT_LINE();							\
 		fputs(#proc " failed\n", stderr);				\
 	)									\
