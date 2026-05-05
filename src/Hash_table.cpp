@@ -5,10 +5,10 @@
 int Hash_table_ctor(struct Hash_table *const ht, HT_hash_func_t hash, struct Hash_gen const *const gen, size_t const buckets_cnt) {
 	assert(ht);
 
-	ht->hash	= hash;
+	ht->hash = hash;
 	if (!gen) { ht->gen = nullptr; }
 	else {
-		ht->gen		= (TYPEOF_UNQUAL(ht->gen))malloc(sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->gen))));
+		ht->gen = (TYPEOF_UNQUAL(ht->gen))malloc(sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->gen))));
 
 		ht->gen->size	= gen->size;
 		ht->gen->data	= malloc(ht->gen->size);
@@ -71,19 +71,7 @@ static int list_insert(List_node **const cur, HT_arg_key_t const key) {
 int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	assert(ht);
 
-	size_t	bucket = ht->hash(ht->gen, key),
-		_temp = 0;
-#if HT_OPTIMIZATION > 1
-	__asm__ (	"mov\t%2, %1\n\t"
-			"dec\t%1\n\t"
-			"and\t%1, %0"
-		:	"+r" (bucket),
-			"=r" (_temp)
-		:	"rm" (ht->buckets_cnt)
-		:	"cc");
-#else
-	bucket %= ht->buckets_cnt;
-#endif
+	size_t bucket = ht->hash(ht->gen, key) % ht->buckets_cnt;
 	CHECK_PROC(list_insert, &ht->buckets[bucket], key);
 
 	return 0;
@@ -101,6 +89,18 @@ static byte_t list_find(List_node const *const cur, HT_arg_key_t const key) {
 byte_t Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key) {
 	assert(ht);
 
-	size_t bucket = ht->hash(ht->gen, key) % ht->buckets_cnt;
+	size_t bucket = ht->hash(ht->gen, key);
+#if HT_OPTIMIZATION > 1
+	size_t _tmp = 0;
+	__asm__ (	"mov\t%2, %1\n\t"
+			"dec\t%1\n\t"
+			"and\t%1, %0"
+		:	"+g" (bucket),
+			"=r" (_tmp)
+		:	"g" (ht->buckets_cnt)
+		:	"cc");
+#else
+	bucket %= ht->buckets_cnt;
+#endif
 	return list_find(ht->buckets[bucket], key);
 }

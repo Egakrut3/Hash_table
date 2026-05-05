@@ -1,32 +1,13 @@
-ALLOW_CPP	?= 1
 RELEASE		?= 0
+# TODO - Add debug and release directories
+OPTIMIZATION	?= 2
+
+ALLOW_CPP	= 1
 
 
 
-INC_DIR		= inc/
-
-SRC_DIR		= src/
-SRC_SUF		= .cpp
-make_src_path	= $(addprefix $(SRC_DIR), $(addsuffix $(SRC_SUF), $(1)))
-
-OBJ_DIR		= bin/
-OBJ_SUF		= .o
-make_obj_path	= $(addprefix $(OBJ_DIR), $(addsuffix $(OBJ_SUF), $(1)))
-
-DEP_DIR		= dep/
-DEP_SUF		= .d
-make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
-
-
-
-SRC = Hash_table HT_test main
-
-TARGET	= Test.elf
-
-
-
-MY_OPTIONS	=	-DHT_OPTIMIZATION=2 -mavx512f	\
-			-pie -fPIE
+MY_OPTIONS =	-DHT_OPTIMIZATION=$(OPTIMIZATION) -mavx512f	\
+		-pie -fPIE
 
 ifeq ($(ALLOW_CPP), 1)
 
@@ -68,26 +49,46 @@ MY_OPTIONS	+=	-O3		\
 
 endif
 
-OPTIONS		=	$(MY_OPTIONS) $(WARNINGS) $(FEATURES)
+OPTIONS = $(MY_OPTIONS) $(WARNINGS) $(FEATURES)
+
+
+
+INC_DIR		= inc/
+
+SRC_DIR		= src/
+SRC_SUF		= .cpp
+make_src_path	= $(addprefix $(SRC_DIR), $(addsuffix $(SRC_SUF), $(1)))
+
+OBJ_DIR		= bin/
+OBJ_SUF		= .o
+make_obj_path	= $(addprefix $(OBJ_DIR), $(addsuffix $(OBJ_SUF), $(1)))
+
+DEP_DIR		= dep/
+DEP_SUF		= .d
+make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
+
+make_obj_rule = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
+	@gcc $(OPTIONS) -I$(INC_DIR) -c $$< -o $$@
 
 
 
 .PHONY: all prepare update_noise update_data test release_test perf_report clean commit
 
-all: $(TARGET)
-
 prepare:
 	@mkdir -p $(OBJ_DIR) $(DEP_DIR)
 
-make_obj = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
-	@gcc $(OPTIONS) -I$(INC_DIR) -c $$< -o $$@
 
-$(foreach src, $(SRC), $(eval $(call make_obj, $(src))))
 
+SRC = Hash_table HT_test main
+$(foreach src, $(SRC), $(eval $(call make_obj_rule, $(src))))
+
+
+
+TARGET = Test.elf
 $(TARGET): $(call make_obj_path, $(SRC))
 	@gcc $(OPTIONS) $^ -o $@
 	@echo Compilation end
-
+.DEFAULT_GOAL = $(TARGET)
 
 
 DATA_DIR	= data/
@@ -95,9 +96,8 @@ DATA_SUF	= .txt
 make_data_path	= $(addprefix $(DATA_DIR), $(addsuffix $(DATA_SUF), $(1)))
 
 NOISE_PATH	?= $(call make_data_path, noise)
-
 KEYS_PATH	?= $(call make_data_path, keys)
-QUERIES_PATH	?= $(call make_data_path, queries) # TODO -
+QUERIES_PATH	?= $(call make_data_path, queries)
 
 FIXED_DATA	?= common_dict words_alpha
 
@@ -118,19 +118,23 @@ update_data:
 	wc -c < "$$temp" | cat - "$$temp" > $(QUERIES_PATH);							\
 	rm "$$temp"
 
+
+
+RUN_TARGET = taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+
 test: $(TARGET)
-	@taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
+	@$(RUN_TARGET)
 
 release_test:
 	@$(MAKE) -B RELEASE=1 test
 
 perf_report:
-	@$(MAKE) -B RELEASE=1
-	@perf record taskset -c 15 ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
-	@perf report
+	@$(MAKE) -B
+	@perf record -o perf_$(OPTIMIZATION)O.data $(RUN_TARGET)
+	@perf report -i perf_$(OPTIMIZATION)O.data
 
 clean:
-	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) Noise.elf $(NOISE_PATH) $(call make_data_path, united_data) $(KEYS_PATH) $(QUERIES_PATH)
+	@rm -fr	$(OBJ_DIR) $(DEP_DIR) $(TARGET) Noise.elf
 
 commit:
 	@git add .

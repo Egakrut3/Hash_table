@@ -9,7 +9,7 @@ static int HT_test_fill(struct Hash_table *const ht, char const *const keys_path
 
 	size_t size = 0;
 	fscanf(input, "%zu\n", &size);
-	char *buffer = (TYPEOF_UNQUAL(buffer))calloc(size, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))));
+	char *const buffer = (TYPEOF_UNQUAL(buffer))calloc(size, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))));
 
 	fread(buffer, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))), size, input);
 	for (size_t i = 0; i < size; i++) {
@@ -35,7 +35,7 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 
 	size_t size = 0;
 	fscanf(input, "%zu\n", &size);
-	char *buffer = (TYPEOF_UNQUAL(buffer))calloc(size, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))));
+	char *const buffer = (TYPEOF_UNQUAL(buffer))calloc(size, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))));
 
 	fread(buffer, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))), size, input);
 	for (size_t i = 0; i < size; i++) {
@@ -69,7 +69,7 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 	return 0;
 }
 
-int HT_test_report(HT_hash_func_t hash, struct Hash_gen *gen, size_t buckets, size_t repeat, char const *keys_path, char const *queries_path) {
+int HT_test_report(HT_hash_func_t hash, struct Hash_gen *const gen, size_t const buckets, size_t const repeat, char const *const keys_path, char const *const queries_path) {
 	struct Hash_table ht = {};
 	CHECK_PROC(Hash_table_ctor, &ht, hash, gen, buckets);
 
