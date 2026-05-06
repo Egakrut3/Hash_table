@@ -6,10 +6,15 @@ extern strcmp
 
 global list_find
 list_find:
+		push	RBP
+		mov	RBP, RSP
+
 		push	RBX
 		mov	RBX, RDI
-		push	RBP
-		mov	RBP, RSI
+		push	R12
+		mov	R12, RSI
+
+		sub	RSP, 8
 
 
 
@@ -17,7 +22,7 @@ list_find:
 		jz	.No
 
 		mov	RDI, [RBX + 8]
-		mov	RSI, RBP
+		mov	RSI, R12
 		call	strcmp wrt ..plt
 
 		mov	RBX, [RBX + 0]
@@ -29,12 +34,16 @@ list_find:
 
 		mov	 AL, 1
 
-		pop	RBP
+		add	RSP, 8
+		pop	R12
 		pop	RBX
+		pop	RBP
 		ret
 
 	.No:	xor	 AL,  AL
 
-		pop	RBP
+		add	RSP, 8
+		pop	R12
 		pop	RBX
+		pop	RBP
 		ret
