@@ -1,6 +1,6 @@
 RELEASE		?= 0
 # TODO - Add debug and release directories
-OPTIMIZATION	?= 2
+OPTIMIZATION	?= 3
 
 ALLOW_CPP	= 1
 
@@ -9,7 +9,7 @@ ALLOW_CPP	= 1
 MY_OPTIONS =	-DHT_OPTIMIZATION=$(OPTIMIZATION) -mavx512f	\
 		-pie -fPIE
 
-ifeq ($(ALLOW_CPP), 1)
+ifeq ($(ALLOW_CPP),1)
 
 MY_OPTIONS	+=	-std=c++23
 
@@ -19,7 +19,7 @@ MY_OPTIONS	+=	-std=c23
 
 endif
 
-ifeq ($(RELEASE), 0)
+ifeq ($(RELEASE),0)
 
 MY_OPTIONS	+=	-Og		\
 			-ggdb3 -D_DEBUG
@@ -33,7 +33,7 @@ WARNINGS	+=	-Wall -Wextra -Waggressive-loop-optimizations -Wmissing-declarations
 FEATURES	+=	-fcheck-new -fstack-protector -fstrict-overflow -flto-odr-type-merging -fno-omit-frame-pointer	\
 			-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-ifeq ($(ALLOW_CPP), 1)
+ifeq ($(ALLOW_CPP),1)
 
 WARNINGS	+=	-Weffc++ -Wc++14-compat -Woverloaded-virtual -Wconditionally-supported -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsign-promo -Wstrict-null-sentinel	\
 			-Wsuggest-override -Wno-literal-suffix -Wno-old-style-cast
@@ -68,7 +68,7 @@ DEP_SUF		= .d
 make_dep_path	= $(addprefix $(DEP_DIR), $(addsuffix $(DEP_SUF), $(1)))
 
 make_obj_rule = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
-	@gcc $(OPTIONS) -I$(INC_DIR) -c $$< -o $$@
+	@gcc $(OPTIONS) -I$(INC_DIR) -c -o $$@ $$<
 
 
 
@@ -85,9 +85,32 @@ $(foreach src, $(SRC), $(eval $(call make_obj_rule, $(src))))
 
 
 TARGET = Test.elf
-$(TARGET): $(call make_obj_path, $(SRC))
-	@gcc $(OPTIONS) $^ -o $@
+
+is_greater = $(shell if [ $(1) -gt $(2) ]; then echo 1; else echo 0; fi)
+
+ifeq ($(call is_greater, $(OPTIMIZATION), 2),1)
+
+ASM_SUF			= .s
+make_asm_src_path	= $(addprefix $(SRC_DIR), $(addsuffix $(ASM_SUF), $(1)))
+
+make_asm_obj_rule = $(call make_obj_path, $(1)): $(call make_asm_src_path, $(1)) | prepare;	\
+	@nasm -f elf64 -o $$@ $$<
+
+ASM_SRC = list_find
+$(foreach src, $(ASM_SRC), $(eval $(call make_asm_obj_rule, $(src))))
+
+$(TARGET): $(call make_obj_path, $(SRC) $(ASM_SRC))
+	@gcc $(OPTIONS) -o $@ $^
 	@echo Compilation end
+
+else
+
+$(TARGET): $(call make_obj_path, $(SRC))
+	@gcc $(OPTIONS) -o $@ $^
+	@echo Compilation end
+
+endif
+
 .DEFAULT_GOAL = $(TARGET)
 
 
@@ -102,7 +125,7 @@ QUERIES_PATH	?= $(call make_data_path, queries)
 FIXED_DATA	?= common_dict words_alpha
 
 Noise.elf:
-	@gcc $(OPTIONS) -I$(INC_DIR) $(call make_src_path, Make_noise) -o Noise.elf
+	@gcc $(OPTIONS) -I$(INC_DIR) -o Noise.elf $(call make_src_path, Make_noise)
 
 update_noise: Noise.elf
 	@./Noise.elf $(NOISE_CNT) > $(NOISE_PATH)

@@ -3,7 +3,7 @@
 #define FINAL_CODE
 
 static int HT_test_fill(struct Hash_table *const ht, char const *const keys_path) {
-	assert(ht); assert(keys_path);
+	assert(keys_path);
 
 	FILE *const input = fopen(keys_path, "r");
 
@@ -29,7 +29,7 @@ static int HT_test_fill(struct Hash_table *const ht, char const *const keys_path
 }
 
 static int HT_test_query(struct Hash_table const *const ht, char const *const queries_path) {
-	assert(ht); assert(queries_path);
+	assert(queries_path);
 
 	FILE *const input = fopen(queries_path, "r");
 
@@ -43,11 +43,9 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 	}
 
 	size_t	tot_queries	= 0,
-		tot_found	= 0,
-		last_cyc	= 0,
-		cur_cyc		= 0;
+		tot_found	= 0;
 	__asm__ volatile ("mfence" ::: "memory");
-	last_cyc = __rdtsc();
+	size_t const beg_cyc = __rdtsc();
 	for (size_t i = 0; i < size; i++) {
 		tot_queries++;
 		tot_found += Hash_table_find(ht, buffer + i);
@@ -55,9 +53,9 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 		while (buffer[i] != '\0') { i++; }
 	}
 	__asm__ volatile ("mfence" ::: "memory");
-	cur_cyc = __rdtsc();
+	size_t const end_cyc = __rdtsc();
 
-	size_t const spent_cyc = cur_cyc - last_cyc;
+	size_t const spent_cyc = end_cyc - beg_cyc;
 	fprintf(stderr,	"%zu queries passed, %zu found\n"
 			"Total %zu cycles spent = %g CPQ\n",
 			tot_queries, tot_found,

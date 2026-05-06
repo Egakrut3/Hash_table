@@ -79,12 +79,20 @@ int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 
 #undef FINAL_CODE
 
+#if HT_OPTIMIZATION > 2
+
+extern "C" byte_t list_find(List_node const *cur, HT_arg_key_t key);
+
+#else
+
 static byte_t list_find(List_node const *const cur, HT_arg_key_t const key) {
 	if (!cur)				{ return 0; }
 	if (HT_KEY_EQUAL(cur->key, key))	{ return 1; }
 
 	return list_find(cur->next, key);
 }
+
+#endif
 
 byte_t Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key) {
 	assert(ht);
