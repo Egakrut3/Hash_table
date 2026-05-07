@@ -1,5 +1,5 @@
 #include "Common.hpp"
-#include "HT_test.hpp"
+#include "Hash_table_test.hpp"
 
 // TODO - Add My_functions
 
@@ -38,7 +38,7 @@ int main(int argc, char const **argv) {
 
 	#define HT_TEST_BUCKETS	((size_t)0x2'00'00)
 	#define HT_TEST_REPEAT	((size_t)5)
-	CHECK_PROC(HT_test_report, crc32_hash, nullptr, HT_TEST_BUCKETS, HT_TEST_REPEAT, argv[1], argv[2]);
+	CHECK_PROC(HT_test_report, crc32_hash, nullptr, HT_TEST_BUCKETS, argv[1], argv[2]);
 
 	return 0;
 }
