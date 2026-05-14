@@ -6,44 +6,41 @@ extern strcmp
 
 global list_find
 list_find:
-		push	RBP
-		mov	RBP, RSP
-
 		push	RBX
-		mov	RBX, RDI
+		push	RBP
+		push	RDX
 		push	R12
 		mov	R12, RSI
-
 		sub	RSP, 8
 
+		mov	RBX, [RDI + 10h]
+		mov	RBP, [RBX + 0 + 0]
+	.Loop:	cmp	RBP, -1
+		je	.No
 
-
-	.Loop:	test	RBX, RBX
-		jz	.No
-
-		mov	RDI, [RBX + 8]
+		shl	RBP, 4
+		mov	RDI, [RBX + RBP + 8]
+		mov	RBP, [RBX + RBP + 0]
 		mov	RSI, R12
 		call	strcmp wrt ..plt
 
-		mov	RBX, [RBX + 0]
-
-		test	EAX, EAX
+		test	RAX, RAX
 		jnz	.Loop
 
-
-
-		mov	 AL, 1
-
+		xor	RAX, RAX
 		add	RSP, 8
 		pop	R12
-		pop	RBX
+		pop	RDX
+		mov	byte [RDX], 1
 		pop	RBP
+		pop	RBX
 		ret
 
-	.No:	xor	 AL,  AL
-
+	.No:	xor	RAX, RAX
 		add	RSP, 8
 		pop	R12
-		pop	RBX
+		pop	RDX
+		mov	byte [RDX], AL
 		pop	RBP
+		pop	RBX
 		ret

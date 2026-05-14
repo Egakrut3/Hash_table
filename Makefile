@@ -1,25 +1,10 @@
 OPTIMIZATION		= 0
 COMPILER_FIXED_OPTIONS	= -DHT_OPTIMIZATION=$(OPTIMIZATION)
 
-
-
 is_greater = $(shell if [ $(1) -gt $(2) ]; then echo 1; else echo 0; fi)
-ifeq ($(call is_greater,$(OPTIMIZATION),0),1)
+ifeq ($(call is_greater,$(OPTIMIZATION),2),1)
 
 COMPILER_FIXED_OPTIONS	+= -mavx512f
-
-else ifeq ($(call is_greater,$(OPTIMIZATION),2),1)
-
-ASM_SUF			= .s
-make_asm_src_path	= $(addprefix $(SRC_DIR),$(addsuffix $(ASM_SUF), $(1)))
-
-
-
-ASM_SRC = list_find
-make_asm_obj_rule = $(call make_obj_path,$(1)): $(call make_asm_src_path,$(1)) | prepare;	\
-	@nasm -o $$@ -f elf64 $$<
-$(foreach src, $(ASM_SRC),$(eval $(call make_asm_obj_rule,$(src))))
-$(TARGET): $(call make_obj_path,$(ASM_SRC))
 
 endif
 
@@ -30,8 +15,25 @@ SRC		= CF_forward_list Hash_table Hash_table_test main
 ISOL_CPU_NUM	= 15
 RUN_TARGET	= taskset -c $(ISOL_CPU_NUM) ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
 
+
+
 COMMON_MAKEFILE = Common_Makefile.mk
 include $(COMMON_MAKEFILE)
+
+
+
+ifeq ($(call is_greater,$(OPTIMIZATION),0),1)
+
+ASM_SUF			= .s
+make_asm_src_path	= $(addprefix $(SRC_DIR),$(addsuffix $(ASM_SUF), $(1)))
+
+ASM_SRC = list_find
+make_asm_obj_rule = $(call make_obj_path,$(1)): $(call make_asm_src_path,$(1)) | prepare;	\
+	@nasm -o $$@ -f elf64 $$<
+$(foreach src, $(ASM_SRC),$(eval $(call make_asm_obj_rule,$(src))))
+$(TARGET): $(call make_obj_path,$(ASM_SRC))
+
+endif
 
 
 
@@ -80,7 +82,7 @@ prepare::
 HYPERFINE_WARMUPS	= 1
 HYPERFINE_RUNS		= 5
 hyperfine_report: all | prepare
-	hyperfine --export-json $(call make_results_path,hyperfine_results_$(OPTIMIZATION).json)	\
+	@hyperfine --export-json $(call make_results_path,hyperfine_results_$(OPTIMIZATION).json)	\
 	--warmup $(HYPERFINE_WARMUPS) --runs $(HYPERFINE_RUNS) "$(RUN_TARGET)"
 
 perf_report: all | prepare

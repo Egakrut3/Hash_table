@@ -61,12 +61,15 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 		if (buffer[i] == '\n') { buffer[i] = '\0'; }
 	}
 
+	size_t tot_found = 0;
 	for (size_t i = 0; i < size; i++) {
 		byte_t found = 0;
 		CHECK_PROC(Hash_table_find, ht, buffer + i, &found);
+		tot_found += found;
 
 		while (buffer[i]) { i++; }
 	}
+	fprintf(stderr, "%zu\n", tot_found);
 
 	CLEAR_RESOURCES();
 

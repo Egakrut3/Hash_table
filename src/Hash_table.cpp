@@ -48,7 +48,7 @@ int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	return 0;
 }
 
-#if HT_OPTIMIZATION > 2
+#if HT_OPTIMIZATION > 0
 
 extern "C" int list_find(struct CFFL const *list, HT_arg_key_t key, byte_t *found);
 
@@ -80,7 +80,7 @@ int Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key, b
 	assert(ht);
 
 	size_t bucket = ht->hash(ht->gen, key);
-#if HT_OPTIMIZATION > 1
+#if HT_OPTIMIZATION > 2
 	size_t _tmp = 0;
 	__asm__ (	"mov\t%2, %1\n\t"
 			"dec\t%1\n\t"

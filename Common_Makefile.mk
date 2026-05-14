@@ -91,7 +91,7 @@ endif
 
 else
 
-COMPILER_FIXED_OPTIONS	+=	-Ofast -DNDEBUG
+COMPILER_FIXED_OPTIONS	+=	-O3 -DNDEBUG
 
 endif
 
