@@ -16,21 +16,11 @@ int Hash_table_ctor(struct Hash_table *const ht, HT_hash_func_t hash, struct Has
 	}
 
 	ht->buckets_cnt	= buckets_cnt;
-	CALLOC_ARR(ht->buckets, ht->buckets_cnt);
+	ALLOC_ARR(ht->buckets, ht->buckets_cnt);
 
-	return 0;
-}
-
-static int list_free(struct List_node **const cur) {
-	assert(cur);
-
-	if (!*cur) { return 0; }
-
-	CHECK_PROC(list_free, &(*cur)->next);
-
-	HT_KEY_FREE((*cur)->key);
-
-	FREE_ELEM(*cur);
+	for (size_t i = 0; i < ht->buckets_cnt; i++) {
+		CHECK_PROC(CFFL_ctor, &ht->buckets[i], CFFL_MIN_CAPACITY);
+	}
 
 	return 0;
 }
@@ -41,30 +31,10 @@ int Hash_table_dtor(struct Hash_table *const ht) {
 	if (ht->gen) { FREE_ELEM(ht->gen); }
 
 	for (size_t i = 0; i < ht->buckets_cnt; i++) {
-		CHECK_PROC(list_free, &ht->buckets[i]);
+		CHECK_PROC(CFFL_dtor, &ht->buckets[i]);
 	}
 
 	FREE_ARR(ht->buckets, ht->buckets_cnt);
-
-	return 0;
-}
-
-static int list_insert(struct List_node **const cur, HT_arg_key_t const key) {
-	assert(cur);
-
-	if (!*cur) {
-		ALLOC_ELEM(*cur);
-
-		(*cur)->next = nullptr;
-
-		HT_KEY_COPY((*cur)->key, key);
-
-		return 0;
-	}
-
-	if (HT_KEY_EQUAL((*cur)->key, key)) { fprintf(stderr, "Key %s already exists\n", key); return 0; }
-
-	CHECK_PROC(list_insert, &(*cur)->next, key);
 
 	return 0;
 }
@@ -73,25 +43,34 @@ int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	assert(ht);
 
 	size_t bucket = ht->hash(ht->gen, key) % ht->buckets_cnt;
-	CHECK_PROC(list_insert, &ht->buckets[bucket], key);
+	CHECK_PROC(CFFL_insert_after, &ht->buckets[bucket], 0, key, nullptr);
 
 	return 0;
 }
 
 #if HT_OPTIMIZATION > 2
 
-extern "C" int list_find(struct List_node const *cur, HT_arg_key_t key, byte_t *found);
+extern "C" int list_find(struct CFFL const *list, HT_arg_key_t key, byte_t *found);
 
 #else
 
-static int list_find(struct List_node const *const cur, HT_arg_key_t const key, byte_t *const found) {
-	assert(found);
+static int list_find(struct CFFL const *const list, HT_arg_key_t const key, byte_t *const found) {
+	assert(list); assert(found);
 
-	if (!cur)				{ *found = 0; return 0; }
-	if (HT_KEY_EQUAL(cur->key, key))	{ *found = 1; return 0; }
+	size_t cur = list->buffer[0].next;
+	while (cur != CFFL_UNAVAILABLE_IND) {
+		if (HT_KEY_EQUAL(list->buffer[cur].val, key)) {
+			*found = 1;
 
-	CHECK_PROC(list_find, cur->next, key, found);
+			CLEAR_RESOURCES();
+			return 0;
+		}
 
+		cur = list->buffer[cur].next;
+	}
+	*found = 0;
+
+	CLEAR_RESOURCES();
 	return 0;
 }
 
@@ -113,7 +92,7 @@ int Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key, b
 #else
 	bucket %= ht->buckets_cnt;
 #endif
-	CHECK_PROC(list_find, ht->buckets[bucket], key, found);
+	CHECK_PROC(list_find, &ht->buckets[bucket], key, found);
 
 	return 0;
 }

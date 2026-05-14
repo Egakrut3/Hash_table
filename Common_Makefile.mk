@@ -132,7 +132,7 @@ all: $(TARGET)
 	@echo Build end
 .DEFAULT_GOAL = all
 
-test: $(TARGET)
+test: all
 	@$(RUN_TARGET)
 
 clean::

@@ -82,6 +82,10 @@ do {													\
 do {													\
 	(dest) = (TYPEOF_UNQUAL(dest))calloc((size), sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
 } while (false)
+#define REALLOC_ARR(dest, new_size)											\
+do {															\
+	(dest) = (TYPEOF_UNQUAL(dest))realloc((dest), (new_size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
+} while (false);
 #define FREE_ARR(arr, size)							\
 do {										\
 	free_sized((arr), (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(arr))));	\

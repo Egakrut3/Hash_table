@@ -2,6 +2,7 @@
 #define HASH_TABLE
 
 #include "Common.hpp"
+#include "CF_forward_list.hpp"
 
 typedef char const	*HT_arg_key_t;
 typedef char		*HT_mem_key_t;
@@ -23,18 +24,12 @@ struct Hash_gen {
 	void	*data;
 };
 
-struct List_node {
-	struct List_node	*next;
-
-	HT_mem_key_t		key;
-};
-
 struct Hash_table {
 	HT_hash_func_t		hash;
 	struct Hash_gen		*gen;
 
 	size_t			buckets_cnt;
-	struct List_node	**buckets;
+	struct CFFL		*buckets;
 };
 
 int Hash_table_ctor(struct Hash_table *ht, HT_hash_func_t hash, struct Hash_gen const *gen, size_t buckets_cnt);

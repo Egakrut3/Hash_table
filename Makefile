@@ -25,7 +25,7 @@ endif
 
 
 
-SRC		= Hash_table Hash_table_test main
+SRC		= CF_forward_list Hash_table Hash_table_test main
 
 ISOL_CPU_NUM	= 15
 RUN_TARGET	= taskset -c $(ISOL_CPU_NUM) ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
@@ -51,10 +51,10 @@ FIXED_DATA	= $(call make_data_path,common_dict words_alpha)
 $(NOISE_TARGET): | prepare
 	@gcc -o $(NOISE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $(call make_src_path,Noise)
 
-update_noise: $(NOISE_TARGET)
+update_noise: $(NOISE_TARGET) | prepare
 	@./$(NOISE_TARGET) $(NOISE_CNT) > $(NOISE_PATH)
 
-update_data:
+update_data: | prepare
 	@$(MAKE) NOISE_CNT=700000 update_noise
 	@cat $(FIXED_DATA) $(NOISE_PATH) | sort -u | shuf > $(UNITED_PATH)
 	@wc -c < $(UNITED_PATH) | cat - $(UNITED_PATH) > $(KEYS_PATH)
@@ -79,11 +79,11 @@ prepare::
 
 HYPERFINE_WARMUPS	= 1
 HYPERFINE_RUNS		= 5
-hyperfine_report: $(TARGET)
+hyperfine_report: all | prepare
 	hyperfine --export-json $(call make_results_path,hyperfine_results_$(OPTIMIZATION).json)	\
 	--warmup $(HYPERFINE_WARMUPS) --runs $(HYPERFINE_RUNS) "$(RUN_TARGET)"
 
-perf_report: $(TARGET)
+perf_report: all | prepare
 	@perf record -o $(call make_results_path,perf_$(OPTIMIZATION).data) $(RUN_TARGET)
 	@perf report -i $(call make_results_path,perf_$(OPTIMIZATION).data)
 
