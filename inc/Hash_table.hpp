@@ -30,8 +30,8 @@ struct List_node {
 };
 
 struct Hash_table {
-	HT_hash_func_t	hash;
-	struct Hash_gen	*gen;
+	HT_hash_func_t		hash;
+	struct Hash_gen		*gen;
 
 	size_t			buckets_cnt;
 	struct List_node	**buckets;
@@ -41,6 +41,6 @@ int Hash_table_ctor(struct Hash_table *ht, HT_hash_func_t hash, struct Hash_gen 
 int Hash_table_dtor(struct Hash_table *ht);
 
 int Hash_table_insert(struct Hash_table *ht, HT_arg_key_t key);
-byte_t Hash_table_find(struct Hash_table const *ht, HT_arg_key_t key);
+int Hash_table_find(struct Hash_table const *ht, HT_arg_key_t key, byte_t *found);
 
 #endif

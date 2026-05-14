@@ -1,159 +1,58 @@
-RELEASE		= 0
-
-ALLOW_CPP	= 1
-
-OPTIMIZATION	= 0
-
-
-
-MY_OPTIONS =	-DHT_OPTIMIZATION=$(OPTIMIZATION) -mavx512f	\
-		-pie -fPIE
-
-ifeq ($(ALLOW_CPP),0)
-
-MY_OPTIONS	+=	-std=c23
-
-else
-
-MY_OPTIONS	+=	-std=c++23
-
-endif
-
-ifeq ($(RELEASE),0)
-
-MY_OPTIONS	+=	-Og		\
-			-ggdb3
-
-WARNINGS	+=	-Wall -Wextra -Waggressive-loop-optimizations -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconversion -Wempty-body -Wfloat-equal	\
-			-Wformat-nonliteral -Wformat-security -Wformat-signedness -Wformat=2 -Winline -Wlogical-op -Wopenmp-simd -Wpacked -Wpointer-arith -Winit-self		\
-			-Wredundant-decls -Wshadow -Wsign-conversion -Wstrict-overflow=2 -Wsuggest-attribute=noreturn -Wsuggest-final-methods -Wsuggest-final-types		\
-			-Wswitch-default -Wswitch-enum -Wsync-nand -Wundef -Wunreachable-code -Wunused -Wuseless-cast -Wvariadic-macros -Wno-missing-field-initializers		\
-			-Wno-narrowing -Wno-varargs -Wstack-protector -Wlarger-than=8192 -Wstack-usage=8192 -Werror=vla
-
-FEATURES	+=	-fcheck-new -fstack-protector -fstrict-overflow -flto-odr-type-merging -fno-omit-frame-pointer	\
-			-fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
-
-ifeq ($(ALLOW_CPP),1)
-
-WARNINGS	+=	-Weffc++ -Wc++14-compat -Woverloaded-virtual -Wconditionally-supported -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsign-promo -Wstrict-null-sentinel	\
-			-Wsuggest-override -Wno-literal-suffix -Wno-old-style-cast
-
-FEATURES	+=	-fsized-deallocation
-
-endif
-
-else
-
-MY_OPTIONS	+=	-Ofast		\
-			-DNDEBUG
-
-endif
-
-OPTIONS = $(MY_OPTIONS) $(WARNINGS) $(FEATURES)
-
-
-
-INC_DIR		= inc/
-
-SRC_DIR		= src/
-SRC_SUF		= .cpp
-make_src_path	= $(addprefix $(SRC_DIR), $(addsuffix $(SRC_SUF), $(1)))
-
-
-
-DEP_DIR		= dep/
-ifeq ($(RELEASE),0)
-
-DEP_SUBDIR	= $(addprefix $(DEP_DIR), debug/)
-
-else
-
-DEP_SUBDIR	= $(addprefix $(DEP_DIR), release/)
-
-endif
-DEP_SUF		= .d
-make_dep_path	= $(addprefix $(DEP_SUBDIR), $(addsuffix $(DEP_SUF), $(1)))
-
-
-
-BIN_DIR		= bin/
-ifeq ($(RELEASE),0)
-
-BIN_SUBDIR	= $(addprefix $(BIN_DIR), debug/)
-
-else
-
-BIN_SUBDIR	= $(addprefix $(BIN_DIR), release/)
-
-endif
-TARGET		= $(addprefix $(BIN_SUBDIR), $(addsuffix .elf, Test))
-OBJ_SUF		= .o
-make_obj_path	= $(addprefix $(BIN_SUBDIR), $(addsuffix $(OBJ_SUF), $(1)))
-
-
-
-make_obj_rule = $(call make_obj_path, $(1)): $(call make_src_path, $(1)) | prepare;	\
-	@gcc $(OPTIONS) -I$(INC_DIR) -c -o $$@ $$<
-SRC = Hash_table Hash_table_test main
-$(foreach src, $(SRC), $(eval $(call make_obj_rule, $(src))))
-$(TARGET): $(call make_obj_path, $(SRC))
+OPTIMIZATION		= 0
+COMPILER_FIXED_OPTIONS	= -DHT_OPTIMIZATION=$(OPTIMIZATION)
 
 
 
 is_greater = $(shell if [ $(1) -gt $(2) ]; then echo 1; else echo 0; fi)
-ifeq ($(call is_greater, $(OPTIMIZATION), 2),1)
+ifeq ($(call is_greater,$(OPTIMIZATION),0),1)
+
+COMPILER_FIXED_OPTIONS	+= -mavx512f
+
+else ifeq ($(call is_greater,$(OPTIMIZATION),2),1)
 
 ASM_SUF			= .s
-make_asm_src_path	= $(addprefix $(SRC_DIR), $(addsuffix $(ASM_SUF), $(1)))
+make_asm_src_path	= $(addprefix $(SRC_DIR),$(addsuffix $(ASM_SUF), $(1)))
 
 
 
-make_asm_obj_rule = $(call make_obj_path, $(1)): $(call make_asm_src_path, $(1)) | prepare;	\
-	@nasm -f elf64 -o $$@ $$<
 ASM_SRC = list_find
-$(foreach src, $(ASM_SRC), $(eval $(call make_asm_obj_rule, $(src))))
-$(TARGET): $(call make_obj_path, $(ASM_SRC))
+make_asm_obj_rule = $(call make_obj_path,$(1)): $(call make_asm_src_path,$(1)) | prepare;	\
+	@nasm -o $$@ -f elf64 $$<
+$(foreach src, $(ASM_SRC),$(eval $(call make_asm_obj_rule,$(src))))
+$(TARGET): $(call make_obj_path,$(ASM_SRC))
 
 endif
 
 
 
-.PHONY: prepare test clean
-
-prepare:
-	@mkdir -p $(BIN_SUBDIR) $(DEP_SUBDIR)
-
-$(TARGET):
-	@gcc $(OPTIONS) -o $@ $^
-	@echo Compilation end
-.DEFAULT_GOAL = $(TARGET)
+SRC		= Hash_table Hash_table_test main
 
 ISOL_CPU_NUM	= 15
 RUN_TARGET	= taskset -c $(ISOL_CPU_NUM) ./$(TARGET) $(KEYS_PATH) $(QUERIES_PATH)
-test: $(TARGET)
-	@$(RUN_TARGET)
 
-clean:
-	@rm -fr	$(BIN_DIR) $(DEP_DIR) Noise.elf $(NOISE_PATH) $(UNITED_PATH) $(KEYS_PATH) $(QUERIES_PATH) *.data
+COMMON_MAKEFILE = Common_Makefile.mk
+include $(COMMON_MAKEFILE)
 
 
 
 DATA_DIR	= data/
 DATA_SUF	= .txt
-make_data_path	= $(addprefix $(DATA_DIR), $(addsuffix $(DATA_SUF), $(1)))
+make_data_path	= $(addprefix $(DATA_DIR),$(addsuffix $(DATA_SUF), $(1)))
 
-NOISE_PATH	= $(call make_data_path, noise)
-UNITED_PATH	= $(call make_data_path, united_data)
-KEYS_PATH	= $(call make_data_path, keys)
-QUERIES_PATH	= $(call make_data_path, queries)
+NOISE_TARGET	= $(call make_exec_path,Noise)
 
-FIXED_DATA	= $(call make_data_path, common_dict words_alpha)
+NOISE_PATH	= $(call make_data_path,noise)
+UNITED_PATH	= $(call make_data_path,united)
+KEYS_PATH	= $(call make_data_path,keys)
+QUERIES_PATH	= $(call make_data_path,queries)
 
-Noise.elf:
-	@gcc $(OPTIONS) -I$(INC_DIR) -o Noise.elf $(call make_src_path, Make_noise)
+FIXED_DATA	= $(call make_data_path,common_dict words_alpha)
 
-update_noise: Noise.elf
-	@./Noise.elf $(NOISE_CNT) > $(NOISE_PATH)
+$(NOISE_TARGET): | prepare
+	@gcc -o $(NOISE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $(call make_src_path,Noise)
+
+update_noise: $(NOISE_TARGET)
+	@./$(NOISE_TARGET) $(NOISE_CNT) > $(NOISE_PATH)
 
 update_data:
 	@$(MAKE) NOISE_CNT=700000 update_noise
@@ -168,24 +67,25 @@ update_data:
 
 
 
-perf_report:
-	@$(MAKE)
-	@perf record -o perf_$(OPTIMIZATION).data $(RUN_TARGET)
-	@perf report -i perf_$(OPTIMIZATION).data
-
-hyperfine_report:
-	@$(MAKE)
-	@hyperfine --warmup 1 --runs 5 --export-json hyperfine_results_$(OPTIMIZATION).json "$(RUN_TARGET)"
+RESULTS_DIR		= results/
+make_results_path	= $(addprefix $(RESULTS_DIR),$(1))
 
 
 
-.SECONDEXPANSION:
+.PHONY: hyperfine_report
 
-%$(DEP_SUF): $(call make_src_path, $$(*F)) | prepare
-	@gcc -MM $(OPTIONS) -I$(INC_DIR) $< | sed 's,$(addsuffix \($(*F)\), $(OBJ_SUF))[ :]*,$(call make_obj_path, \1) $@: ,g' > $@
+prepare::
+	@mkdir -p $(RESULTS_DIR)
 
-ifeq ($(filter clean, $(MAKECMDGOALS)),)
+HYPERFINE_WARMUPS	= 1
+HYPERFINE_RUNS		= 5
+hyperfine_report: $(TARGET)
+	@hyperfine --export-json make_results_path(hyperfine_results_$(OPTIMIZATION).json)	\
+	--warmup $(HYPERFINE_WARMUPS) --runs $(HYPERFINE_RUNS) "$(RUN_TARGET)"
 
-include $(call make_dep_path, $(SRC))
+perf_report: $(TARGET)
+	@perf record -o make_results_path(perf_$(OPTIMIZATION).data) $(RUN_TARGET)
+	@perf report -i make_results_path(perf_$(OPTIMIZATION).data)
 
-endif
+clean::
+	@rm -fr	$(NOISE_PATH) $(UNITED_PATH) $(KEYS_PATH) $(QUERIES_PATH) $(RESULTS_DIR)

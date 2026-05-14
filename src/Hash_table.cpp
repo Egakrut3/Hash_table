@@ -8,7 +8,7 @@ int Hash_table_ctor(struct Hash_table *const ht, HT_hash_func_t hash, struct Has
 	ht->hash = hash;
 	if (!gen) { ht->gen = nullptr; }
 	else {
-		ht->gen = (TYPEOF_UNQUAL(ht->gen))malloc(sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->gen))));
+		ALLOC_ELEM(ht->gen);
 
 		ht->gen->size	= gen->size;
 		ht->gen->data	= malloc(ht->gen->size);
@@ -16,12 +16,12 @@ int Hash_table_ctor(struct Hash_table *const ht, HT_hash_func_t hash, struct Has
 	}
 
 	ht->buckets_cnt	= buckets_cnt;
-	ht->buckets	= (TYPEOF_UNQUAL(ht->buckets))calloc(ht->buckets_cnt, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->buckets))));
+	CALLOC_ARR(ht->buckets, ht->buckets_cnt);
 
 	return 0;
 }
 
-static int list_free(List_node **const cur) {
+static int list_free(struct List_node **const cur) {
 	assert(cur);
 
 	if (!*cur) { return 0; }
@@ -29,8 +29,8 @@ static int list_free(List_node **const cur) {
 	CHECK_PROC(list_free, &(*cur)->next);
 
 	HT_KEY_FREE((*cur)->key);
-	free_sized(*cur, sizeof(REMOVE_POINTER(REMOVE_POINTER(TYPEOF_UNQUAL(cur)))));
-	*cur = nullptr;
+
+	FREE_ELEM(*cur);
 
 	return 0;
 }
@@ -38,21 +38,22 @@ static int list_free(List_node **const cur) {
 int Hash_table_dtor(struct Hash_table *const ht) {
 	assert(ht);
 
-	if (ht->gen) { free_sized(ht->gen->data, ht->gen->size); }
+	if (ht->gen) { FREE_ELEM(ht->gen); }
 
 	for (size_t i = 0; i < ht->buckets_cnt; i++) {
-		if (ht->buckets[i]) { CHECK_PROC(list_free, &ht->buckets[i]); }
+		CHECK_PROC(list_free, &ht->buckets[i]);
 	}
-	free_sized(ht->buckets, ht->buckets_cnt * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(ht->buckets))));
+
+	FREE_ARR(ht->buckets, ht->buckets_cnt);
 
 	return 0;
 }
 
-static int list_insert(List_node **const cur, HT_arg_key_t const key) {
+static int list_insert(struct List_node **const cur, HT_arg_key_t const key) {
 	assert(cur);
 
 	if (!*cur) {
-		*cur = (REMOVE_POINTER(TYPEOF_UNQUAL(cur)))malloc(sizeof(REMOVE_POINTER(REMOVE_POINTER(TYPEOF_UNQUAL(cur)))));
+		ALLOC_ELEM(*cur);
 
 		(*cur)->next = nullptr;
 
@@ -77,24 +78,26 @@ int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	return 0;
 }
 
-#undef FINAL_CODE
-
 #if HT_OPTIMIZATION > 2
 
-extern "C" byte_t list_find(List_node const *cur, HT_arg_key_t key);
+extern "C" int list_find(struct List_node const *cur, HT_arg_key_t key, byte_t *found);
 
 #else
 
-static byte_t list_find(List_node const *const cur, HT_arg_key_t const key) {
-	if (!cur)				{ return 0; }
-	if (HT_KEY_EQUAL(cur->key, key))	{ return 1; }
+static int list_find(struct List_node const *const cur, HT_arg_key_t const key, byte_t *const found) {
+	assert(found);
 
-	return list_find(cur->next, key);
+	if (!cur)				{ *found = 0; return 0; }
+	if (HT_KEY_EQUAL(cur->key, key))	{ *found = 1; return 0; }
+
+	CHECK_PROC(list_find, cur->next, key, found);
+
+	return 0;
 }
 
 #endif
 
-byte_t Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key) {
+int Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key, byte_t *const found) {
 	assert(ht);
 
 	size_t bucket = ht->hash(ht->gen, key);
@@ -110,5 +113,9 @@ byte_t Hash_table_find(struct Hash_table const *const ht, HT_arg_key_t const key
 #else
 	bucket %= ht->buckets_cnt;
 #endif
-	return list_find(ht->buckets[bucket], key);
+	CHECK_PROC(list_find, ht->buckets[bucket], key, found);
+
+	return 0;
 }
+
+#undef FINAL_CODE

@@ -1,5 +1,6 @@
 #include "Common.hpp"
 #include "Hash_table_test.hpp"
+#include <immintrin.h>
 
 // TODO - Add My_functions
 
@@ -33,7 +34,7 @@ static size_t crc32_hash([[maybe_unused]] struct Hash_gen *const gen, char const
 
 #define FINAL_CODE
 
-int main(int argc, char const **argv) {
+int main(int argc, char const *argv[]) {
 	assert(argc == 3);
 
 	#define HT_TEST_BUCKETS	((size_t)0x2'00'00)

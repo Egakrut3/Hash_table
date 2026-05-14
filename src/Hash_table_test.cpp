@@ -19,7 +19,7 @@ static int HT_test_fill(struct Hash_table *const ht, char const *const keys_path
 	FREE_ARR(buffer, size);	\
 	fclose(input);
 
-	fread(buffer, sizeof(REMOVE_POINTER(LVAL_TYPEOF(buffer))), size, input);
+	fread(buffer, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))), size, input);
 	for (size_t i = 0; i < size; i++) {
 		if (buffer[i] == '\n') { buffer[i] = '\0'; }
 	}
@@ -56,13 +56,14 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 	FREE_ARR(buffer, size);	\
 	fclose(input);
 
-	fread(buffer, sizeof(REMOVE_POINTER(LVAL_TYPEOF(buffer))), size, input);
+	fread(buffer, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))), size, input);
 	for (size_t i = 0; i < size; i++) {
 		if (buffer[i] == '\n') { buffer[i] = '\0'; }
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		Hash_table_find(ht, buffer + i);
+		byte_t found = 0;
+		CHECK_PROC(Hash_table_find, ht, buffer + i, &found);
 
 		while (buffer[i]) { i++; }
 	}

@@ -9,7 +9,23 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include <immintrin.h>
+
+
+#if defined(__STDC_VERSION__)
+
+#define DECLTYPE(expr)		typeof(expr)
+#define TYPEOF_UNQUAL(expr)	typeof_unqual(expr)
+#define REMOVE_POINTER(type)	TYPEOF_UNQUAL(*(type)nullptr)
+
+#else
+
+#include <type_traits>
+
+#define DECLTYPE(expr)		decltype((expr))
+#define TYPEOF_UNQUAL(expr)	std::remove_cv_t<std::remove_reference_t<DECLTYPE(expr)>>
+#define REMOVE_POINTER(type)	std::remove_pointer_t<type>
+
+#endif
 
 
 
@@ -23,26 +39,6 @@
 
 #endif
 
-
-
-#if defined(__STDC_VERSION__)
-
-#define TYPEOF_UNQUAL(expr)	typeof(expr)
-#define LVAL_TYPEOF(expr)	TYPEOF_UNQUAL(expr)
-#define REMOVE_POINTER(type)	TYPEOF_UNQUAL(*(type)nullptr)
-
-#else
-
-#include <type_traits>
-
-#define TYPEOF_UNQUAL(expr)	std::remove_cv_t<decltype(expr)>
-#define LVAL_TYPEOF(expr)	std::remove_reference_t<TYPEOF_UNQUAL(expr)>
-#define REMOVE_POINTER(type)	std::remove_pointer_t<type>
-
-#endif
-
-
-
 #define CLEAR_RESOURCES()	\
 do {				\
 	FINAL_CODE		\
@@ -55,7 +51,7 @@ do {									\
 
 #define CHECK_PROC(proc, ...)							\
 do {										\
-	int _cur_err_val = proc(__VA_ARGS__);					\
+	int _cur_err_val = (proc)(__VA_ARGS__);					\
 	if (!_cur_err_val) { break; }						\
 	ON_DEBUG(								\
 		fprintf(stderr, "Error with code %d found\n", _cur_err_val);	\
@@ -68,23 +64,27 @@ do {										\
 
 
 
-#define ALLOC_ELEM(dest)								\
-do {											\
-	(dest) = (LVAL_TYPEOF(dest))malloc(sizeof(REMOVE_POINTER(LVAL_TYPEOF(dest))));	\
+#define ALLOC_ELEM(dest)									\
+do {												\
+	(dest) = (TYPEOF_UNQUAL(dest))malloc(sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
 } while (false)
-#define FREE_ELEM(elem)							\
-do {									\
-	free_sized((elem), sizeof(REMOVE_POINTER(LVAL_TYPEOF(elem))));	\
-	(elem) = nullptr;						\
+#define FREE_ELEM(elem)								\
+do {										\
+	free_sized((elem), sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(elem))));	\
+	(elem) = nullptr;							\
 } while (false)
 
-#define ALLOC_ARR(dest, size)									\
-do {												\
-	(dest) = (LVAL_TYPEOF(dest))malloc((size) * sizeof(REMOVE_POINTER(LVAL_TYPEOF(dest))));	\
+#define ALLOC_ARR(dest, size)										\
+do {													\
+	(dest) = (TYPEOF_UNQUAL(dest))malloc((size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
+} while (false)
+#define CALLOC_ARR(dest, size)										\
+do {													\
+	(dest) = (TYPEOF_UNQUAL(dest))calloc((size), sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
 } while (false)
 #define FREE_ARR(arr, size)							\
 do {										\
-	free_sized((arr), (size) * sizeof(REMOVE_POINTER(LVAL_TYPEOF(arr))));	\
+	free_sized((arr), (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(arr))));	\
 	(arr) = nullptr;							\
 } while (false)
 
