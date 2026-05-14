@@ -80,12 +80,12 @@ prepare::
 HYPERFINE_WARMUPS	= 1
 HYPERFINE_RUNS		= 5
 hyperfine_report: $(TARGET)
-	@hyperfine --export-json make_results_path(hyperfine_results_$(OPTIMIZATION).json)	\
+	hyperfine --export-json $(call make_results_path,hyperfine_results_$(OPTIMIZATION).json)	\
 	--warmup $(HYPERFINE_WARMUPS) --runs $(HYPERFINE_RUNS) "$(RUN_TARGET)"
 
 perf_report: $(TARGET)
-	@perf record -o make_results_path(perf_$(OPTIMIZATION).data) $(RUN_TARGET)
-	@perf report -i make_results_path(perf_$(OPTIMIZATION).data)
+	@perf record -o $(call make_results_path,perf_$(OPTIMIZATION).data) $(RUN_TARGET)
+	@perf report -i $(call make_results_path,perf_$(OPTIMIZATION).data)
 
 clean::
 	@rm -fr	$(NOISE_PATH) $(UNITED_PATH) $(KEYS_PATH) $(QUERIES_PATH) $(RESULTS_DIR)
