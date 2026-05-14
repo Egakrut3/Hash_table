@@ -2,7 +2,7 @@ OPTIMIZATION		= 0
 COMPILER_FIXED_OPTIONS	= -DHT_OPTIMIZATION=$(OPTIMIZATION)
 
 is_greater = $(shell if [ $(1) -gt $(2) ]; then echo 1; else echo 0; fi)
-ifeq ($(call is_greater,$(OPTIMIZATION),2),1)
+ifeq ($(call is_greater,$(OPTIMIZATION),1),1)
 
 COMPILER_FIXED_OPTIONS	+= -mavx512f
 
