@@ -2,7 +2,9 @@
 #define CF_FORWARD_LIST
 
 #include "Common.hpp"
-// TODO - Linearize and shrink
+// TODO - Add linearize and shrink
+
+
 
 typedef char const	*CFFL_arg_t;
 typedef char		*CFFL_mem_t;
@@ -10,11 +12,18 @@ typedef char		*CFFL_mem_t;
 #define CFFL_VAL_COPY(dest, src)	\
 do {					\
 	dest = strdup(src);		\
-} while (false);
+} while (false)
 #define CFFL_VAL_FREE(val)	\
 do {				\
 	free(val);		\
-} while (false);
+} while (false)
+
+#define CFFL_EXPANSION		((size_t)2)
+#define CFFL_MIN_CAPACITY	((size_t)2)
+static_assert(CFFL_EXPANSION > 1);
+static_assert(CFFL_MIN_CAPACITY > 1);
+
+
 
 struct CFFL_node {
 	size_t		next;
@@ -22,18 +31,11 @@ struct CFFL_node {
 	CFFL_mem_t	val;
 };
 
-#define CFFL_EXPANSION		((size_t)2)
-#define CFFL_MIN_CAPACITY	((size_t)2)
-static_assert(CFFL_EXPANSION > 1);
-static_assert(CFFL_MIN_CAPACITY > 1);
-
-#define CFFL_UNAVAILABLE_IND (~(size_t)0)
-
 struct CFFL {
-	size_t			capacity,
-				size;
+	size_t			capacity;
 	struct CFFL_node	*buffer;
-	size_t			first_empty;
+
+	size_t			first_vacant;
 };
 
 int CFFL_ctor(struct CFFL *list, size_t start_capacity);
@@ -43,7 +45,9 @@ size_t CFFL_before_begin(struct CFFL const *list);
 size_t CFFL_begin(struct CFFL const *list);
 size_t CFFL_end(struct CFFL const *list);
 
-int CFFL_insert_after(struct CFFL *list, size_t after_what, CFFL_arg_t val, size_t *result);
-int CFFL_erase_after(struct CFFL *list, size_t after_what);
+int CFFL_insert_after(struct CFFL *list, size_t *result, size_t pos, CFFL_arg_t val);
+int CFFL_push_front(struct CFFL *list, CFFL_arg_t val);
+int CFFL_erase_after(struct CFFL *list, size_t pos);
+int CFFL_pop_front(struct CFFL *list);
 
 #endif

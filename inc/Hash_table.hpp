@@ -4,38 +4,30 @@
 #include "Common.hpp"
 #include "CF_forward_list.hpp"
 
-typedef char const	*HT_arg_key_t;
-typedef char		*HT_mem_key_t;
 
-#define HT_KEY_COPY(dest, src)	\
-do {				\
-	dest = strdup(src);	\
-} while (false)
-#define HT_KEY_FREE(key)	\
-do {				\
-	free(key);		\
-} while (false);
-#define HT_KEY_EQUAL(a, b) (!strcmp(a, b))
 
-typedef size_t (*HT_hash_func_t)(struct Hash_gen *gen, HT_arg_key_t key);
+typedef CFFL_arg_t HT_arg_key_t;
+typedef CFFL_mem_t HT_mem_key_t;
 
-struct Hash_gen {
-	size_t	size;
-	void	*data;
-};
+#define HT_KEY_COPY(dest, src)	CFFL_VAL_COPY(dest, src)
+#define HT_KEY_FREE(key)	CFFL_VAL_FREE(key)
+#define HT_KEY_EQUAL(a, b)	(!strcmp(a, b))
+
+
+
+typedef size_t (*HT_hash_func_t)(HT_arg_key_t key);
 
 struct Hash_table {
 	HT_hash_func_t		hash;
-	struct Hash_gen		*gen;
 
 	size_t			buckets_cnt;
 	struct CFFL		*buckets;
 };
 
-int Hash_table_ctor(struct Hash_table *ht, HT_hash_func_t hash, struct Hash_gen const *gen, size_t buckets_cnt);
+int Hash_table_ctor(struct Hash_table *ht, HT_hash_func_t hash, size_t buckets_cnt);
 int Hash_table_dtor(struct Hash_table *ht);
 
 int Hash_table_insert(struct Hash_table *ht, HT_arg_key_t key);
-int Hash_table_find(struct Hash_table const *ht, HT_arg_key_t key, byte_t *found);
+int Hash_table_find(struct Hash_table const *ht, bool *found, HT_arg_key_t key);
 
 #endif

@@ -8,12 +8,12 @@ global list_find
 list_find:
 		push	RBX
 		push	RBP
-		push	RDX
+		push	RSI
 		push	R12
-		mov	R12, RSI
+		mov	R12, RDX
 		sub	RSP, 8
 
-		mov	RBX, [RDI + 10h]
+		mov	RBX, [RDI + 8]
 		mov	RBP, [RBX + 0 + 0]
 	.Loop:	cmp	RBP, -1
 		je	.No
@@ -30,8 +30,8 @@ list_find:
 		xor	RAX, RAX
 		add	RSP, 8
 		pop	R12
-		pop	RDX
-		mov	byte [RDX], 1
+		pop	RSI
+		mov	byte [RSI], 1
 		pop	RBP
 		pop	RBX
 		ret
@@ -39,8 +39,8 @@ list_find:
 	.No:	xor	RAX, RAX
 		add	RSP, 8
 		pop	R12
-		pop	RDX
-		mov	byte [RDX], AL
+		pop	RSI
+		mov	byte [RSI], AL
 		pop	RBP
 		pop	RBX
 		ret

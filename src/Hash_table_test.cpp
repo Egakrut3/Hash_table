@@ -14,24 +14,24 @@ static int HT_test_fill(struct Hash_table *const ht, char const *const keys_path
 	fscanf(input, "%zu\n", &size);
 	char *buffer = nullptr;
 	ALLOC_ARR(buffer, size);
+	char *const buffer_end = buffer + size;
 	#undef FINAL_CODE
 	#define FINAL_CODE	\
 	FREE_ARR(buffer, size);	\
 	fclose(input);
 
 	fread(buffer, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))), size, input);
-	for (size_t i = 0; i < size; i++) {
-		if (buffer[i] == '\n') { buffer[i] = '\0'; }
+	for (char *ptr = buffer; ptr != buffer_end; ptr++) {
+		if (*ptr == '\n') { *ptr = 0; }
 	}
 
-	for (size_t i = 0; i < size; i++) {
-		Hash_table_insert(ht, buffer + i);
+	for (char *ptr = buffer; ptr != buffer_end; ptr++) {
+		CHECK_PROC(Hash_table_insert, ht, ptr);
 
-		while (buffer[i] != '\0') { i++; }
+		while (*ptr) { ptr++; }
 	}
 
 	CLEAR_RESOURCES();
-	
 	return 0;
 
 	#undef FINAL_CODE
@@ -51,38 +51,38 @@ static int HT_test_query(struct Hash_table const *const ht, char const *const qu
 	fscanf(input, "%zu\n", &size);
 	char *buffer = nullptr;
 	ALLOC_ARR(buffer, size);
+	char *const buffer_end = buffer + size;
 	#undef FINAL_CODE
 	#define FINAL_CODE	\
 	FREE_ARR(buffer, size);	\
 	fclose(input);
 
 	fread(buffer, sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(buffer))), size, input);
-	for (size_t i = 0; i < size; i++) {
-		if (buffer[i] == '\n') { buffer[i] = '\0'; }
+	for (char *ptr = buffer; ptr != buffer_end; ptr++) {
+		if (*ptr == '\n') { *ptr = 0; }
 	}
 
 	size_t tot_found = 0;
-	for (size_t i = 0; i < size; i++) {
-		byte_t found = 0;
-		CHECK_PROC(Hash_table_find, ht, buffer + i, &found);
+	for (char *ptr = buffer; ptr != buffer_end; ptr++) {
+		bool found = false;
+		CHECK_PROC(Hash_table_find, ht, &found, ptr);
 		tot_found += found;
 
-		while (buffer[i]) { i++; }
+		while (*ptr) { ptr++; }
 	}
 	fprintf(stderr, "%zu\n", tot_found);
 
 	CLEAR_RESOURCES();
-
 	return 0;
 
 	#undef FINAL_CODE
 }
 
-int HT_test_report(HT_hash_func_t hash, struct Hash_gen *const gen, size_t const buckets, char const *const keys_path, char const *const queries_path) {
+int HT_test_report(HT_hash_func_t hash, size_t const buckets_cnt, char const *const keys_path, char const *const queries_path) {
 	#define FINAL_CODE
 
 	struct Hash_table ht = {};
-	CHECK_PROC(Hash_table_ctor, &ht, hash, gen, buckets);
+	CHECK_PROC(Hash_table_ctor, &ht, hash, buckets_cnt);
 	#undef FINAL_CODE
 	#define FINAL_CODE	\
 	Hash_table_dtor(&ht);

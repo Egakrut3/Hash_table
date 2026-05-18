@@ -5,9 +5,8 @@
 // TODO - Add My_functions
 
 #define MOD 0x82F63B78
-static size_t crc32_hash([[maybe_unused]] struct Hash_gen *const gen, char const *str) {
+static size_t crc32_hash(char const *str) {
 	assert(str);
-	assert(!gen);
 
 	uint32_t crc = 0;
 	while (*str) {
@@ -38,8 +37,7 @@ int main(int argc, char const *argv[]) {
 	assert(argc == 3);
 
 	#define HT_TEST_BUCKETS	((size_t)0x2'00'00)
-	#define HT_TEST_REPEAT	((size_t)5)
-	CHECK_PROC(HT_test_report, crc32_hash, nullptr, HT_TEST_BUCKETS, argv[1], argv[2]);
+	CHECK_PROC(HT_test_report, crc32_hash, HT_TEST_BUCKETS, argv[1], argv[2]);
 
 	return 0;
 }
