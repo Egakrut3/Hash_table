@@ -74,6 +74,15 @@ make_results_path	= $(addprefix $(RESULTS_DIR),$(1))
 
 
 
+HASH_COMPARE_TARGET	= $(call make_exec_path,Hash_compare)
+$(HASH_COMPARE_TARGET): | prepare
+	@gcc -o $(HASH_COMPARE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $(call make_src_path,Hash_compare)
+
+hash_compare: $(HASH_COMPARE_TARGET) | prepare
+	@./$(HASH_COMPARE_TARGET) < $(KEYS_PATH) > $(call make_results_path,Hash_compare.csv)
+
+
+
 .PHONY: hyperfine_report
 
 prepare::
