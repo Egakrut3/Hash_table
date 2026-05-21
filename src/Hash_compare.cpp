@@ -50,12 +50,19 @@ static size_t sum_hash(char const *str) {
 	return hash;
 }
 
+static size_t len_hash(char const *const str) {
+	assert(str);
+
+	return strlen(str);
+}
+
 typedef size_t (*hash_func_t)(char const *key);
 
-#define HASH_FUNC_CNT 3
+#define HASH_FUNC_CNT 4
 hash_func_t hash_func[HASH_FUNC_CNT] = {	&crc32_hash,
 						&polinomial_hash,
-						&sum_hash,};
+						&sum_hash,
+						&len_hash,};
 
 #define BUCKETS_CNT ((size_t)0x2'00'00)
 size_t buckets[BUCKETS_CNT][HASH_FUNC_CNT] = {};
@@ -89,10 +96,12 @@ int main() {
 	printf(	"%s,"
 		"%s,"
 		"%s,"
+		"%s,"
 		"\n",
 		"CRC32",
 		"Polynomial",
-		"Sum");
+		"Sum",
+		"Length");
 	for (size_t bucket = 0; bucket < BUCKETS_CNT; bucket++) {
 		for (size_t i = 0; i < HASH_FUNC_CNT; i++) {
 			printf("%zu,", buckets[bucket][i]);

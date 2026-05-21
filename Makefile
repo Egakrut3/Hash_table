@@ -50,8 +50,8 @@ QUERIES_PATH	= $(call make_data_path,queries)
 
 FIXED_DATA	= $(call make_data_path,common_dict words_alpha)
 
-$(NOISE_TARGET): | prepare
-	@gcc -o $(NOISE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $(call make_src_path,Noise)
+$(NOISE_TARGET): $(call make_src_path,Noise) | prepare
+	@gcc -o $(NOISE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $<
 
 update_noise: $(NOISE_TARGET) | prepare
 	@./$(NOISE_TARGET) $(NOISE_CNT) > $(NOISE_PATH)
@@ -75,8 +75,8 @@ make_results_path	= $(addprefix $(RESULTS_DIR),$(1))
 
 
 HASH_COMPARE_TARGET	= $(call make_exec_path,Hash_compare)
-$(HASH_COMPARE_TARGET): | prepare
-	@gcc -o $(HASH_COMPARE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $(call make_src_path,Hash_compare)
+$(HASH_COMPARE_TARGET): $(call make_src_path,Hash_compare) | prepare
+	@gcc -o $(HASH_COMPARE_TARGET) $(COMPILER_OPTIONS) $(LINKER_OPTIONS) -I$(INC_DIR) $<
 
 hash_compare: $(HASH_COMPARE_TARGET) | prepare
 	@./$(HASH_COMPARE_TARGET) < $(KEYS_PATH) > $(call make_results_path,Hash_compare.csv)
