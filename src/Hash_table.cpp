@@ -44,17 +44,47 @@ int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 static int list_find(struct CFFL const *const list, bool *const found, HT_arg_key_t const key) {
 	assert(list); assert(found);
 
-	size_t cur = CFFL_begin(list);
-	while (cur != CFFL_end(list)) {
-		if (HT_KEY_EQUAL(list->buffer[cur].val, key)) {
-			*found = true;
+	struct CFFL_node const *const	list_buffer	= list->buffer;
+	size_t				cur		= CFFL_begin(list),
+					list_end	= CFFL_end(list);
+	int				result		= 0;
 
-			CLEAR_RESOURCES();
-			return 0;
-		}
+#if HT_OPTIMIZATION > 2
+Loop:	__asm__ goto (
+		"\t\tcmp\t%0, %1\n"
+		"\t\tje\t%l[No]\n":
+		:
+		"r" (cur),
+		"g" (list_end):
+		"cc":
+		No
+	);
+#else
+	while (cur != list_end) {
+#endif
+		result = HT_KEY_NEQUAL(list_buffer[cur].val, key);
+		cur = list_buffer[cur].next;
+	#if HT_OPTIMIZATION > 2
+		__asm__ goto (
+			"\t\ttest\t%0, %0\n"
+			"\t\tjnz\t%l[Loop]\n":
+			:
+			"r" (result):
+			"cc":
+			Loop
+		);
+	#else
+		if (result) { continue; }
+	#endif
+		*found = true;
 
-		cur = list->buffer[cur].next;
+		CLEAR_RESOURCES();
+		return 0;
+#if HT_OPTIMIZATION > 2
+No:
+#else
 	}
+#endif
 	*found = false;
 
 	CLEAR_RESOURCES();
@@ -64,19 +94,7 @@ static int list_find(struct CFFL const *const list, bool *const found, HT_arg_ke
 int Hash_table_find(struct Hash_table const *const ht, bool *const found, HT_arg_key_t const key) {
 	assert(ht);
 
-#if HT_OPTIMIZATION > 2
-	size_t	bucket	= ht->hash(key),
-		_tmp	= 0;
-	__asm__ (	"mov\t%2, %1\n\t"
-			"dec\t%1\n\t"
-			"and\t%1, %0":
-			"+g" (bucket),
-			"=r" (_tmp):
-			"g" (ht->buckets_cnt):
-			"cc");
-#else
 	size_t const bucket = ht->hash(key) % ht->buckets_cnt;
-#endif
 	CHECK_PROC(list_find, &ht->buckets[bucket], found, key);
 
 	CLEAR_RESOURCES();

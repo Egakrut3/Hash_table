@@ -15,11 +15,11 @@ typedef CFFL_mem_t HT_mem_key_t;
 #if HT_OPTIMIZATION > 0
 
 extern "C" int my_strcmp(HT_arg_key_t a, HT_arg_key_t b);
-#define HT_KEY_EQUAL(a, b)	(!my_strcmp(a, b))
+#define HT_KEY_NEQUAL(a, b)	(my_strcmp(a, b))
 
 #else
 
-#define HT_KEY_EQUAL(a, b)	(!strcmp(a, b))
+#define HT_KEY_NEQUAL(a, b)	(strcmp(a, b))
 
 #endif
 
