@@ -42,7 +42,7 @@ static size_t sum_hash(char const *str) {
 
 	size_t hash = 0;
 	while (*str) {
-		hash += (size_t)*str;
+		hash += (unsigned char)*str;
 
 		str++;
 	}
@@ -73,11 +73,11 @@ int main() {
 	size_t size = 0;
 	scanf("%zu\n", &size);
 	char *buffer = nullptr;
-	ALLOC_ARR(buffer, size);
+	ALLOCU_ARR(buffer, size);
 	char *const buffer_end = buffer + size;
 	#undef FINAL_CODE
 	#define FINAL_CODE	\
-	FREE_ARR(buffer, size);
+	FREEU_ARR(buffer, size);
 
 	fread(buffer, sizeof(buffer), size, stdin);
 	for (char *ptr = buffer; ptr != buffer_end; ptr++) {

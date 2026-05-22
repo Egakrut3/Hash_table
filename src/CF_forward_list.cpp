@@ -15,7 +15,7 @@ int CFFL_ctor(struct CFFL *const list, size_t const start_capacity) {
 	} else {
 		list->capacity	= start_capacity;
 	}
-	ALLOC_ARR(list->buffer, list->capacity);
+	ALLOCU_ARR(list->buffer, list->capacity);
 
 	list->buffer[HEAD].next	= UNAVAILABLE_IND;
 	for (size_t i = HEAD + 1; i < list->capacity - 1; ++i) {
@@ -38,7 +38,7 @@ int CFFL_dtor(struct CFFL *const list) {
 		cur = list->buffer[cur].next;
 	}
 
-	FREE_ARR(list->buffer, list->capacity);
+	FREEU_ARR(list->buffer, list->capacity);
 
 	CLEAR_RESOURCES();
 	return 0;

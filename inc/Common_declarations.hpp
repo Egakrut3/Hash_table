@@ -74,22 +74,37 @@ do {										\
 	(elem) = nullptr;							\
 } while (false)
 
-#define ALLOC_ARR(dest, size)										\
+#define ALLOCU_ARR(dest, size)										\
 do {													\
 	(dest) = (TYPEOF_UNQUAL(dest))malloc((size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
 } while (false)
-#define CALLOC_ARR(dest, size)										\
+#define ALLOCA_ARR(dest, alignement, size)											\
+do {																\
+	(dest) = (TYPEOF_UNQUAL(dest))aligned_alloc((alignement), (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
+} while (false)
+#define CALLOCU_ARR(dest, size)										\
 do {													\
 	(dest) = (TYPEOF_UNQUAL(dest))calloc((size), sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
 } while (false)
+#define CALLOCA_ARR(dest, alignement, size)											\
+do {																\
+	(dest) = (TYPEOF_UNQUAL(dest))aligned_alloc((alignement), (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
+	memset((dest), 0, (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));						\
+} while (false)
+
 #define REALLOC_ARR(dest, new_size)											\
 do {															\
 	(dest) = (TYPEOF_UNQUAL(dest))realloc((dest), (new_size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(dest))));	\
-} while (false);
-#define FREE_ARR(arr, size)							\
+} while (false)
+
+#define FREEU_ARR(arr, size)							\
 do {										\
 	free_sized((arr), (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(arr))));	\
 	(arr) = nullptr;							\
+} while (false)
+#define FREEA_ARR(arr, alignement, size)								\
+do {													\
+	free_aligned_sized((arr), (alignement), (size) * sizeof(REMOVE_POINTER(TYPEOF_UNQUAL(arr))));	\
 } while (false)
 
 

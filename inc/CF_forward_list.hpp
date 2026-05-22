@@ -9,14 +9,28 @@
 typedef char const	*CFFL_arg_t;
 typedef char		*CFFL_mem_t;
 
+#if HT_OPTIMIZATION > 0
+
+#define CFFL_ALIGNEMENT		((size_t)64)
+#define CFFL_MAX_STR_LEN	((size_t)64)
+#define CFFL_VAL_COPY(dest, src)					\
+do {									\
+	CALLOCA_ARR(dest, CFFL_ALIGNEMENT, CFFL_MAX_STR_LEN);		\
+	strcpy(dest, src);						\
+} while (false)
+
+#define CFFL_VAL_FREE(val) FREEA_ARR(val, CFFL_ALIGNEMENT, CFFL_MAX_STR_LEN)
+
+#else
+
 #define CFFL_VAL_COPY(dest, src)	\
 do {					\
 	dest = strdup(src);		\
 } while (false)
-#define CFFL_VAL_FREE(val)	\
-do {				\
-	free(val);		\
-} while (false)
+
+#define CFFL_VAL_FREE(val) free(val)
+
+#endif
 
 #define CFFL_EXPANSION		((size_t)2)
 #define CFFL_MIN_CAPACITY	((size_t)2)

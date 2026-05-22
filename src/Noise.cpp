@@ -15,10 +15,10 @@ int main(int const argc, char *const argv[]) {
 	size_t count = 0;
 	sscanf(argv[1], "%zu", &count);
 	size_t *lens = nullptr;
-	ALLOC_ARR(lens, count);
+	ALLOCU_ARR(lens, count);
 	#undef FINAL_CODE
 	#define FINAL_CODE	\
-	FREE_ARR(lens, count);
+	FREEU_ARR(lens, count);
 
 	size_t sum_len = 0;
 	for (size_t i = 0; i < count; i++) {
@@ -27,11 +27,11 @@ int main(int const argc, char *const argv[]) {
 	}
 
 	char *buffer = nullptr;
-	ALLOC_ARR(buffer, sum_len);
+	ALLOCU_ARR(buffer, sum_len);
 	#undef FINAL_CODE
 	#define FINAL_CODE		\
-	FREE_ARR(buffer, sum_len);	\
-	FREE_ARR(lens, count);
+	FREEU_ARR(buffer, sum_len);	\
+	FREEU_ARR(lens, count);
 
 	size_t cur_beg = 0;
 	for (size_t i = 0; i < count; cur_beg += lens[i] + 1, i++) {

@@ -8,7 +8,7 @@ int Hash_table_ctor(struct Hash_table *const ht, HT_hash_func_t hash, size_t con
 	ht->hash = hash;
 
 	ht->buckets_cnt	= buckets_cnt;
-	ALLOC_ARR(ht->buckets, ht->buckets_cnt);
+	ALLOCU_ARR(ht->buckets, ht->buckets_cnt);
 
 	for (size_t i = 0; i < ht->buckets_cnt; i++) {
 		CHECK_PROC(CFFL_ctor, &ht->buckets[i], CFFL_MIN_CAPACITY);
@@ -25,7 +25,7 @@ int Hash_table_dtor(struct Hash_table *const ht) {
 		CHECK_PROC(CFFL_dtor, &ht->buckets[i]);
 	}
 
-	FREE_ARR(ht->buckets, ht->buckets_cnt);
+	FREEU_ARR(ht->buckets, ht->buckets_cnt);
 
 	CLEAR_RESOURCES();
 	return 0;
@@ -40,12 +40,6 @@ int Hash_table_insert(struct Hash_table *const ht, HT_arg_key_t const key) {
 	CLEAR_RESOURCES();
 	return 0;
 }
-
-#if HT_OPTIMIZATION > 0
-
-extern "C" int list_find(struct CFFL const *list, bool *found, HT_arg_key_t key);
-
-#else
 
 static int list_find(struct CFFL const *const list, bool *const found, HT_arg_key_t const key) {
 	assert(list); assert(found);
@@ -66,8 +60,6 @@ static int list_find(struct CFFL const *const list, bool *const found, HT_arg_ke
 	CLEAR_RESOURCES();
 	return 0;
 }
-
-#endif
 
 int Hash_table_find(struct Hash_table const *const ht, bool *const found, HT_arg_key_t const key) {
 	assert(ht);
